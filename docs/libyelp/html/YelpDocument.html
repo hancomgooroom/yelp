@@ -1,0 +1,670 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>YelpDocument: Yelp Reference Manual</title>
+<meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
+<link rel="home" href="index.html" title="Yelp Reference Manual">
+<link rel="up" href="ch01s02.html" title="Document Processing">
+<link rel="prev" href="ch01s02.html" title="Document Processing">
+<link rel="next" href="YelpSimpleDocument.html" title="YelpSimpleDocument">
+<meta name="generator" content="GTK-Doc V1.28 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="5"><tr valign="middle">
+<td width="100%" align="left" class="shortcuts">
+<a href="#" class="shortcut">Top</a><span id="nav_description">  <span class="dim">|</span> 
+                  <a href="#YelpDocument.description" class="shortcut">Description</a></span><span id="nav_hierarchy">  <span class="dim">|</span> 
+                  <a href="#YelpDocument.object-hierarchy" class="shortcut">Object Hierarchy</a></span><span id="nav_properties">  <span class="dim">|</span> 
+                  <a href="#YelpDocument.properties" class="shortcut">Properties</a></span>
+</td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
+<td><a accesskey="u" href="ch01s02.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
+<td><a accesskey="p" href="ch01s02.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
+<td><a accesskey="n" href="YelpSimpleDocument.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
+</tr></table>
+<div class="refentry">
+<a name="YelpDocument"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="YelpDocument.top_of_page"></a>YelpDocument</span></h2>
+<p>YelpDocument</p>
+</td>
+<td class="gallery_image" valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsect1">
+<a name="YelpDocument.functions"></a><h2>Functions</h2>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="functions_return">
+<col class="functions_name">
+</colgroup>
+<tbody>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<span class="c_punctuation">(</span><a href="YelpDocument.html#YelpDocumentCallback">*YelpDocumentCallback</a><span class="c_punctuation">)</span> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">YelpDocument</span> *
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-get-for-uri">yelp_document_get_for_uri</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">YelpDocument</span> *
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-lookup-document-uri">yelp_document_lookup_document_uri</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">YelpUri</span> *
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-get-uri">yelp_document_get_uri</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gboolean</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-request-page">yelp_document_request_page</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-clear-contents">yelp_document_clear_contents</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> **
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-get-requests">yelp_document_get_requests</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-give-contents">yelp_document_give_contents</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-get-mime-type">yelp_document_get_mime_type</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">const <span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-read-contents">yelp_document_read_contents</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-finish-read">yelp_document_finish_read</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-index">yelp_document_index</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> **
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-list-page-ids">yelp_document_list_page_ids</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-get-page-id">yelp_document_get_page_id</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-set-page-id">yelp_document_set_page_id</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-get-root-id">yelp_document_get_root_id</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-set-root-id">yelp_document_set_root_id</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-get-prev-id">yelp_document_get_prev_id</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-set-prev-id">yelp_document_set_prev_id</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">char</span> *
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-get-next-id">yelp_document_get_next_id</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-set-next-id">yelp_document_set_next_id</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-get-up-id">yelp_document_get_up_id</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-set-up-id">yelp_document_set_up_id</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-get-root-title">yelp_document_get_root_title</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-get-page-title">yelp_document_get_page_title</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-set-page-title">yelp_document_set_page_title</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-get-page-desc">yelp_document_get_page_desc</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-set-page-desc">yelp_document_set_page_desc</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-get-page-icon">yelp_document_get_page_icon</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-set-page-icon">yelp_document_set_page_icon</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gboolean</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-has-page">yelp_document_has_page</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-signal">yelp_document_signal</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-error-pending">yelp_document_error_pending</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="YelpDocument.properties"></a><h2>Properties</h2>
+<div class="informaltable"><table class="informaltable" border="0">
+<colgroup>
+<col width="150px" class="properties_type">
+<col width="300px" class="properties_name">
+<col width="200px" class="properties_flags">
+</colgroup>
+<tbody>
+<tr>
+<td class="property_type">
+<span class="type">YelpUri</span> *</td>
+<td class="property_name"><a href="YelpDocument.html#YelpDocument--document-uri">document-uri</a></td>
+<td class="property_flags">Read / Write / Construct Only</td>
+</tr>
+<tr>
+<td class="property_type"><span class="type">gboolean</span></td>
+<td class="property_name"><a href="YelpDocument.html#YelpDocument--indexed">indexed</a></td>
+<td class="property_flags">Read / Write / Construct</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="YelpDocument.other"></a><h2>Types and Values</h2>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="name">
+<col class="description">
+</colgroup>
+<tbody>
+<tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a href="YelpDocument.html#YelpDocumentSignal">YelpDocumentSignal</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword"> </td>
+<td class="function_name"><a href="YelpDocument.html#YelpDocumentPriv">YelpDocumentPriv</a></td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="YelpDocument.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="screen">    GObject
+    <span class="lineart">╰──</span> YelpDocument
+        <span class="lineart">├──</span> YelpDocbookDocument
+        <span class="lineart">├──</span> YelpHelpList
+        <span class="lineart">├──</span> YelpInfoDocument
+        <span class="lineart">├──</span> YelpMallardDocument
+        <span class="lineart">├──</span> YelpManDocument
+        <span class="lineart">╰──</span> YelpSimpleDocument
+</pre>
+</div>
+<div class="refsect1">
+<a name="YelpDocument.description"></a><h2>Description</h2>
+</div>
+<div class="refsect1">
+<a name="YelpDocument.functions_details"></a><h2>Functions</h2>
+<div class="refsect2">
+<a name="YelpDocumentCallback"></a><h3>YelpDocumentCallback ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+<span class="c_punctuation">(</span>*YelpDocumentCallback<span class="c_punctuation">)</span> (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                         <em class="parameter"><code><a href="YelpDocument.html#YelpDocumentSignal"><span class="type">YelpDocumentSignal</span></a> signal</code></em>,
+                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>,
+                         <em class="parameter"><code><span class="type">GError</span> *error</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-get-for-uri"></a><h3>yelp_document_get_for_uri ()</h3>
+<pre class="programlisting"><span class="returnvalue">YelpDocument</span> *
+yelp_document_get_for_uri (<em class="parameter"><code><span class="type">YelpUri</span> *uri</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-lookup-document-uri"></a><h3>yelp_document_lookup_document_uri ()</h3>
+<pre class="programlisting"><span class="returnvalue">YelpDocument</span> *
+yelp_document_lookup_document_uri (<em class="parameter"><code>const <span class="type">gchar</span> *docuri</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-get-uri"></a><h3>yelp_document_get_uri ()</h3>
+<pre class="programlisting"><span class="returnvalue">YelpUri</span> *
+yelp_document_get_uri (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-request-page"></a><h3>yelp_document_request_page ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>
+yelp_document_request_page (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                            <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>,
+                            <em class="parameter"><code><span class="type">GCancellable</span> *cancellable</code></em>,
+                            <em class="parameter"><code><a href="YelpDocument.html#YelpDocumentCallback"><span class="type">YelpDocumentCallback</span></a> callback</code></em>,
+                            <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>,
+                            <em class="parameter"><code><span class="type">GDestroyNotify</span> notify</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-clear-contents"></a><h3>yelp_document_clear_contents ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_document_clear_contents (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-get-requests"></a><h3>yelp_document_get_requests ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> **
+yelp_document_get_requests (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-give-contents"></a><h3>yelp_document_give_contents ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_document_give_contents (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                             <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>,
+                             <em class="parameter"><code><span class="type">gchar</span> *contents</code></em>,
+                             <em class="parameter"><code>const <span class="type">gchar</span> *mime</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-get-mime-type"></a><h3>yelp_document_get_mime_type ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_document_get_mime_type (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                             <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-read-contents"></a><h3>yelp_document_read_contents ()</h3>
+<pre class="programlisting">const <span class="returnvalue">gchar</span> *
+yelp_document_read_contents (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                             <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-finish-read"></a><h3>yelp_document_finish_read ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_document_finish_read (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                           <em class="parameter"><code>const <span class="type">gchar</span> *contents</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-index"></a><h3>yelp_document_index ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_document_index (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-list-page-ids"></a><h3>yelp_document_list_page_ids ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> **
+yelp_document_list_page_ids (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-get-page-id"></a><h3>yelp_document_get_page_id ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_document_get_page_id (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                           <em class="parameter"><code>const <span class="type">gchar</span> *id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-set-page-id"></a><h3>yelp_document_set_page_id ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_document_set_page_id (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                           <em class="parameter"><code>const <span class="type">gchar</span> *id</code></em>,
+                           <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-get-root-id"></a><h3>yelp_document_get_root_id ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_document_get_root_id (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                           <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-set-root-id"></a><h3>yelp_document_set_root_id ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_document_set_root_id (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                           <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>,
+                           <em class="parameter"><code>const <span class="type">gchar</span> *root_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-get-prev-id"></a><h3>yelp_document_get_prev_id ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_document_get_prev_id (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                           <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-set-prev-id"></a><h3>yelp_document_set_prev_id ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_document_set_prev_id (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                           <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>,
+                           <em class="parameter"><code>const <span class="type">gchar</span> *prev_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-get-next-id"></a><h3>yelp_document_get_next_id ()</h3>
+<pre class="programlisting"><span class="returnvalue">char</span> *
+yelp_document_get_next_id (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                           <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-set-next-id"></a><h3>yelp_document_set_next_id ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_document_set_next_id (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                           <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>,
+                           <em class="parameter"><code>const <span class="type">gchar</span> *next_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-get-up-id"></a><h3>yelp_document_get_up_id ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_document_get_up_id (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                         <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-set-up-id"></a><h3>yelp_document_set_up_id ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_document_set_up_id (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                         <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>,
+                         <em class="parameter"><code>const <span class="type">gchar</span> *up_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-get-root-title"></a><h3>yelp_document_get_root_title ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_document_get_root_title (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                              <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-get-page-title"></a><h3>yelp_document_get_page_title ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_document_get_page_title (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                              <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-set-page-title"></a><h3>yelp_document_set_page_title ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_document_set_page_title (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                              <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>,
+                              <em class="parameter"><code>const <span class="type">gchar</span> *title</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-get-page-desc"></a><h3>yelp_document_get_page_desc ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_document_get_page_desc (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                             <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-set-page-desc"></a><h3>yelp_document_set_page_desc ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_document_set_page_desc (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                             <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>,
+                             <em class="parameter"><code>const <span class="type">gchar</span> *desc</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-get-page-icon"></a><h3>yelp_document_get_page_icon ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_document_get_page_icon (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                             <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-set-page-icon"></a><h3>yelp_document_set_page_icon ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_document_set_page_icon (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                             <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>,
+                             <em class="parameter"><code>const <span class="type">gchar</span> *icon</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-has-page"></a><h3>yelp_document_has_page ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>
+yelp_document_has_page (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                        <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-signal"></a><h3>yelp_document_signal ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_document_signal (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                      <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>,
+                      <em class="parameter"><code><a href="YelpDocument.html#YelpDocumentSignal"><span class="type">YelpDocumentSignal</span></a> signal</code></em>,
+                      <em class="parameter"><code>const <span class="type">GError</span> *error</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-error-pending"></a><h3>yelp_document_error_pending ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_document_error_pending (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                             <em class="parameter"><code>const <span class="type">GError</span> *error</code></em>);</pre>
+</div>
+</div>
+<div class="refsect1">
+<a name="YelpDocument.other_details"></a><h2>Types and Values</h2>
+<div class="refsect2">
+<a name="YelpDocumentSignal"></a><h3>enum YelpDocumentSignal</h3>
+<div class="refsect3">
+<a name="YelpDocumentSignal.members"></a><h4>Members</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
+</colgroup>
+<tbody>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-DOCUMENT-SIGNAL-CONTENTS:CAPS"></a>YELP_DOCUMENT_SIGNAL_CONTENTS</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-DOCUMENT-SIGNAL-INFO:CAPS"></a>YELP_DOCUMENT_SIGNAL_INFO</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-DOCUMENT-SIGNAL-ERROR:CAPS"></a>YELP_DOCUMENT_SIGNAL_ERROR</p></td>
+<td> </td>
+<td> </td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="YelpDocumentPriv"></a><h3>YelpDocumentPriv</h3>
+<pre class="programlisting">typedef struct _YelpDocumentPriv YelpDocumentPriv;</pre>
+</div>
+</div>
+<div class="refsect1">
+<a name="YelpDocument.property-details"></a><h2>Property Details</h2>
+<div class="refsect2">
+<a name="YelpDocument--document-uri"></a><h3>The <code class="literal">“document-uri”</code> property</h3>
+<pre class="programlisting">  “document-uri”             <span class="type">YelpUri</span> *</pre>
+<p>The URI which identifies the document.</p>
+<p>Flags: Read / Write / Construct Only</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="YelpDocument--indexed"></a><h3>The <code class="literal">“indexed”</code> property</h3>
+<pre class="programlisting">  “indexed”                  <span class="type">gboolean</span></pre>
+<p>Whether the document content has been indexed.</p>
+<p>Flags: Read / Write / Construct</p>
+<p>Default value: FALSE</p>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>Generated by GTK-Doc V1.28</div>
+</body>
+</html>

@@ -1,0 +1,392 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>YelpUri: Yelp Reference Manual</title>
+<meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
+<link rel="home" href="index.html" title="Yelp Reference Manual">
+<link rel="up" href="ch01.html" title="API Reference">
+<link rel="prev" href="YelpSimpleDocument.html" title="YelpSimpleDocument">
+<link rel="next" href="YelpSettings.html" title="YelpSettings">
+<meta name="generator" content="GTK-Doc V1.28 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="5"><tr valign="middle">
+<td width="100%" align="left" class="shortcuts">
+<a href="#" class="shortcut">Top</a><span id="nav_description">  <span class="dim">|</span> 
+                  <a href="#YelpUri.description" class="shortcut">Description</a></span><span id="nav_hierarchy">  <span class="dim">|</span> 
+                  <a href="#YelpUri.object-hierarchy" class="shortcut">Object Hierarchy</a></span><span id="nav_signals">  <span class="dim">|</span> 
+                  <a href="#YelpUri.signals" class="shortcut">Signals</a></span>
+</td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
+<td><a accesskey="u" href="ch01.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
+<td><a accesskey="p" href="YelpSimpleDocument.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
+<td><a accesskey="n" href="YelpSettings.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
+</tr></table>
+<div class="refentry">
+<a name="YelpUri"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="YelpUri.top_of_page"></a>YelpUri</span></h2>
+<p>YelpUri</p>
+</td>
+<td class="gallery_image" valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsect1">
+<a name="YelpUri.functions"></a><h2>Functions</h2>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="functions_return">
+<col class="functions_name">
+</colgroup>
+<tbody>
+<tr>
+<td class="function_type">
+<span class="returnvalue">YelpUri</span> *
+</td>
+<td class="function_name">
+<a href="YelpUri.html#yelp-uri-new">yelp_uri_new</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">YelpUri</span> *
+</td>
+<td class="function_name">
+<a href="YelpUri.html#yelp-uri-new-relative">yelp_uri_new_relative</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">YelpUri</span> *
+</td>
+<td class="function_name">
+<a href="YelpUri.html#yelp-uri-new-search">yelp_uri_new_search</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpUri.html#yelp-uri-resolve">yelp_uri_resolve</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpUri.html#yelp-uri-resolve-sync">yelp_uri_resolve_sync</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gboolean</span>
+</td>
+<td class="function_name">
+<a href="YelpUri.html#yelp-uri-is-resolved">yelp_uri_is_resolved</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a href="YelpUri.html#YelpUriDocumentType"><span class="returnvalue">YelpUriDocumentType</span></a>
+</td>
+<td class="function_name">
+<a href="YelpUri.html#yelp-uri-get-document-type">yelp_uri_get_document_type</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpUri.html#yelp-uri-get-canonical-uri">yelp_uri_get_canonical_uri</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpUri.html#yelp-uri-get-document-uri">yelp_uri_get_document_uri</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">GFile</span> *
+</td>
+<td class="function_name">
+<a href="YelpUri.html#yelp-uri-get-file">yelp_uri_get_file</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> **
+</td>
+<td class="function_name">
+<a href="YelpUri.html#yelp-uri-get-search-path">yelp_uri_get_search_path</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpUri.html#yelp-uri-get-page-id">yelp_uri_get_page_id</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpUri.html#yelp-uri-get-frag-id">yelp_uri_get_frag_id</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpUri.html#yelp-uri-get-query">yelp_uri_get_query</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpUri.html#yelp-uri-locate-file-uri">yelp_uri_locate_file_uri</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="YelpUri.signals"></a><h2>Signals</h2>
+<div class="informaltable"><table class="informaltable" border="0">
+<colgroup>
+<col width="150px" class="signals_return">
+<col width="300px" class="signals_name">
+<col width="200px" class="signals_flags">
+</colgroup>
+<tbody><tr>
+<td class="signal_type"><span class="returnvalue">void</span></td>
+<td class="signal_name"><a href="YelpUri.html#YelpUri-resolved">resolved</a></td>
+<td class="signal_flags">Run Last</td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="YelpUri.other"></a><h2>Types and Values</h2>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="name">
+<col class="description">
+</colgroup>
+<tbody><tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a href="YelpUri.html#YelpUriDocumentType">YelpUriDocumentType</a></td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="YelpUri.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="screen">    GObject
+    <span class="lineart">╰──</span> YelpUri
+</pre>
+</div>
+<div class="refsect1">
+<a name="YelpUri.description"></a><h2>Description</h2>
+</div>
+<div class="refsect1">
+<a name="YelpUri.functions_details"></a><h2>Functions</h2>
+<div class="refsect2">
+<a name="yelp-uri-new"></a><h3>yelp_uri_new ()</h3>
+<pre class="programlisting"><span class="returnvalue">YelpUri</span> *
+yelp_uri_new (<em class="parameter"><code>const <span class="type">gchar</span> *arg</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-uri-new-relative"></a><h3>yelp_uri_new_relative ()</h3>
+<pre class="programlisting"><span class="returnvalue">YelpUri</span> *
+yelp_uri_new_relative (<em class="parameter"><code><span class="type">YelpUri</span> *base</code></em>,
+                       <em class="parameter"><code>const <span class="type">gchar</span> *arg</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-uri-new-search"></a><h3>yelp_uri_new_search ()</h3>
+<pre class="programlisting"><span class="returnvalue">YelpUri</span> *
+yelp_uri_new_search (<em class="parameter"><code><span class="type">YelpUri</span> *base</code></em>,
+                     <em class="parameter"><code>const <span class="type">gchar</span> *text</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-uri-resolve"></a><h3>yelp_uri_resolve ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_uri_resolve (<em class="parameter"><code><span class="type">YelpUri</span> *uri</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-uri-resolve-sync"></a><h3>yelp_uri_resolve_sync ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_uri_resolve_sync (<em class="parameter"><code><span class="type">YelpUri</span> *uri</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-uri-is-resolved"></a><h3>yelp_uri_is_resolved ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>
+yelp_uri_is_resolved (<em class="parameter"><code><span class="type">YelpUri</span> *uri</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-uri-get-document-type"></a><h3>yelp_uri_get_document_type ()</h3>
+<pre class="programlisting"><a href="YelpUri.html#YelpUriDocumentType"><span class="returnvalue">YelpUriDocumentType</span></a>
+yelp_uri_get_document_type (<em class="parameter"><code><span class="type">YelpUri</span> *uri</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-uri-get-canonical-uri"></a><h3>yelp_uri_get_canonical_uri ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_uri_get_canonical_uri (<em class="parameter"><code><span class="type">YelpUri</span> *uri</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-uri-get-document-uri"></a><h3>yelp_uri_get_document_uri ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_uri_get_document_uri (<em class="parameter"><code><span class="type">YelpUri</span> *uri</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-uri-get-file"></a><h3>yelp_uri_get_file ()</h3>
+<pre class="programlisting"><span class="returnvalue">GFile</span> *
+yelp_uri_get_file (<em class="parameter"><code><span class="type">YelpUri</span> *uri</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-uri-get-search-path"></a><h3>yelp_uri_get_search_path ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> **
+yelp_uri_get_search_path (<em class="parameter"><code><span class="type">YelpUri</span> *uri</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-uri-get-page-id"></a><h3>yelp_uri_get_page_id ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_uri_get_page_id (<em class="parameter"><code><span class="type">YelpUri</span> *uri</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-uri-get-frag-id"></a><h3>yelp_uri_get_frag_id ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_uri_get_frag_id (<em class="parameter"><code><span class="type">YelpUri</span> *uri</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-uri-get-query"></a><h3>yelp_uri_get_query ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_uri_get_query (<em class="parameter"><code><span class="type">YelpUri</span> *uri</code></em>,
+                    <em class="parameter"><code>const <span class="type">gchar</span> *key</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-uri-locate-file-uri"></a><h3>yelp_uri_locate_file_uri ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_uri_locate_file_uri (<em class="parameter"><code><span class="type">YelpUri</span> *uri</code></em>,
+                          <em class="parameter"><code>const <span class="type">gchar</span> *filename</code></em>);</pre>
+</div>
+</div>
+<div class="refsect1">
+<a name="YelpUri.other_details"></a><h2>Types and Values</h2>
+<div class="refsect2">
+<a name="YelpUriDocumentType"></a><h3>enum YelpUriDocumentType</h3>
+<div class="refsect3">
+<a name="YelpUriDocumentType.members"></a><h4>Members</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
+</colgroup>
+<tbody>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-URI-DOCUMENT-TYPE-UNRESOLVED:CAPS"></a>YELP_URI_DOCUMENT_TYPE_UNRESOLVED</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-URI-DOCUMENT-TYPE-DOCBOOK:CAPS"></a>YELP_URI_DOCUMENT_TYPE_DOCBOOK</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-URI-DOCUMENT-TYPE-MALLARD:CAPS"></a>YELP_URI_DOCUMENT_TYPE_MALLARD</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-URI-DOCUMENT-TYPE-MAN:CAPS"></a>YELP_URI_DOCUMENT_TYPE_MAN</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-URI-DOCUMENT-TYPE-INFO:CAPS"></a>YELP_URI_DOCUMENT_TYPE_INFO</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-URI-DOCUMENT-TYPE-TEXT:CAPS"></a>YELP_URI_DOCUMENT_TYPE_TEXT</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-URI-DOCUMENT-TYPE-HTML:CAPS"></a>YELP_URI_DOCUMENT_TYPE_HTML</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-URI-DOCUMENT-TYPE-XHTML:CAPS"></a>YELP_URI_DOCUMENT_TYPE_XHTML</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-URI-DOCUMENT-TYPE-HELP-LIST:CAPS"></a>YELP_URI_DOCUMENT_TYPE_HELP_LIST</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-URI-DOCUMENT-TYPE-NOT-FOUND:CAPS"></a>YELP_URI_DOCUMENT_TYPE_NOT_FOUND</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-URI-DOCUMENT-TYPE-EXTERNAL:CAPS"></a>YELP_URI_DOCUMENT_TYPE_EXTERNAL</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-URI-DOCUMENT-TYPE-ERROR:CAPS"></a>YELP_URI_DOCUMENT_TYPE_ERROR</p></td>
+<td> </td>
+<td> </td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+</div>
+<div class="refsect1">
+<a name="YelpUri.signal-details"></a><h2>Signal Details</h2>
+<div class="refsect2">
+<a name="YelpUri-resolved"></a><h3>The <code class="literal">“resolved”</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+user_function (<span class="type">YelpUri</span> *yelpuri,
+               <span class="type">gpointer</span> user_data)</pre>
+<p>Flags: Run Last</p>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>Generated by GTK-Doc V1.28</div>
+</body>
+</html>

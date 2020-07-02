@@ -1,0 +1,15 @@
+yelp_bookmarks_get_type
+yelp_docbook_document_get_type
+yelp_document_get_type
+yelp_help_list_get_type
+yelp_info_document_get_type
+yelp_mallard_document_get_type
+yelp_man_document_get_type
+yelp_search_entry_get_type
+yelp_settings_get_type
+yelp_simple_document_get_type
+yelp_sqlite_storage_get_type
+yelp_storage_get_type
+yelp_transform_get_type
+yelp_uri_get_type
+yelp_view_get_type

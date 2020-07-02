@@ -1,0 +1,435 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>YelpView: Yelp Reference Manual</title>
+<meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
+<link rel="home" href="index.html" title="Yelp Reference Manual">
+<link rel="up" href="ch01.html#id-1.2.2" title="Widgets">
+<link rel="prev" href="ch01.html" title="API Reference">
+<link rel="next" href="ch01s02.html" title="Document Processing">
+<meta name="generator" content="GTK-Doc V1.28 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="5"><tr valign="middle">
+<td width="100%" align="left" class="shortcuts">
+<a href="#" class="shortcut">Top</a><span id="nav_description">  <span class="dim">|</span> 
+                  <a href="#YelpView.description" class="shortcut">Description</a></span><span id="nav_hierarchy">  <span class="dim">|</span> 
+                  <a href="#YelpView.object-hierarchy" class="shortcut">Object Hierarchy</a></span><span id="nav_properties">  <span class="dim">|</span> 
+                  <a href="#YelpView.properties" class="shortcut">Properties</a></span><span id="nav_signals">  <span class="dim">|</span> 
+                  <a href="#YelpView.signals" class="shortcut">Signals</a></span>
+</td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
+<td><a accesskey="u" href="ch01.html#id-1.2.2"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
+<td><a accesskey="p" href="ch01.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
+<td><a accesskey="n" href="ch01s02.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
+</tr></table>
+<div class="refentry">
+<a name="YelpView"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="YelpView.top_of_page"></a>YelpView</span></h2>
+<p>YelpView</p>
+</td>
+<td class="gallery_image" valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsect1">
+<a name="YelpView.functions"></a><h2>Functions</h2>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="functions_return">
+<col class="functions_name">
+</colgroup>
+<tbody>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gboolean</span>
+</td>
+<td class="function_name">
+<span class="c_punctuation">(</span><a href="YelpView.html#YelpViewActionValidFunc">*YelpViewActionValidFunc</a><span class="c_punctuation">)</span> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">GtkWidget</span> *
+</td>
+<td class="function_name">
+<a href="YelpView.html#yelp-view-new">yelp_view_new</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpView.html#yelp-view-load">yelp_view_load</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpView.html#yelp-view-load-uri">yelp_view_load_uri</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpView.html#yelp-view-load-document">yelp_view_load_document</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">YelpDocument</span> *
+</td>
+<td class="function_name">
+<a href="YelpView.html#yelp-view-get-document">yelp_view_get_document</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpView.html#yelp-view-register-actions">yelp_view_register_actions</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpView.html#yelp-view-add-link-action">yelp_view_add_link_action</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">YelpUri</span> *
+</td>
+<td class="function_name">
+<a href="YelpView.html#yelp-view-get-active-link-uri">yelp_view_get_active_link_uri</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
+<a href="YelpView.html#yelp-view-get-active-link-text">yelp_view_get_active_link_text</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="YelpView.properties"></a><h2>Properties</h2>
+<div class="informaltable"><table class="informaltable" border="0">
+<colgroup>
+<col width="150px" class="properties_type">
+<col width="300px" class="properties_name">
+<col width="200px" class="properties_flags">
+</colgroup>
+<tbody>
+<tr>
+<td class="property_type">
+<span class="type">gchar</span> *</td>
+<td class="property_name"><a href="YelpView.html#YelpView--page-desc">page-desc</a></td>
+<td class="property_flags">Read</td>
+</tr>
+<tr>
+<td class="property_type">
+<span class="type">gchar</span> *</td>
+<td class="property_name"><a href="YelpView.html#YelpView--page-icon">page-icon</a></td>
+<td class="property_flags">Read</td>
+</tr>
+<tr>
+<td class="property_type">
+<span class="type">gchar</span> *</td>
+<td class="property_name"><a href="YelpView.html#YelpView--page-id">page-id</a></td>
+<td class="property_flags">Read</td>
+</tr>
+<tr>
+<td class="property_type">
+<span class="type">gchar</span> *</td>
+<td class="property_name"><a href="YelpView.html#YelpView--page-title">page-title</a></td>
+<td class="property_flags">Read</td>
+</tr>
+<tr>
+<td class="property_type">
+<span class="type">gchar</span> *</td>
+<td class="property_name"><a href="YelpView.html#YelpView--root-title">root-title</a></td>
+<td class="property_flags">Read</td>
+</tr>
+<tr>
+<td class="property_type"><a href="YelpView.html#YelpViewState"><span class="type">YelpViewState</span></a></td>
+<td class="property_name"><a href="YelpView.html#YelpView--state">state</a></td>
+<td class="property_flags">Read / Write</td>
+</tr>
+<tr>
+<td class="property_type">
+<span class="type">YelpUri</span> *</td>
+<td class="property_name"><a href="YelpView.html#YelpView--yelp-uri">yelp-uri</a></td>
+<td class="property_flags">Read / Write</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="YelpView.signals"></a><h2>Signals</h2>
+<div class="informaltable"><table class="informaltable" border="0">
+<colgroup>
+<col width="150px" class="signals_return">
+<col width="300px" class="signals_name">
+<col width="200px" class="signals_flags">
+</colgroup>
+<tbody>
+<tr>
+<td class="signal_type"><span class="returnvalue">gboolean</span></td>
+<td class="signal_name"><a href="YelpView.html#YelpView-external-uri">external-uri</a></td>
+<td class="signal_flags">Run Last</td>
+</tr>
+<tr>
+<td class="signal_type"><span class="returnvalue">void</span></td>
+<td class="signal_name"><a href="YelpView.html#YelpView-loaded">loaded</a></td>
+<td class="signal_flags">Run Last</td>
+</tr>
+<tr>
+<td class="signal_type"><span class="returnvalue">void</span></td>
+<td class="signal_name"><a href="YelpView.html#YelpView-new-view-requested">new-view-requested</a></td>
+<td class="signal_flags">Run Last</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="YelpView.other"></a><h2>Types and Values</h2>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="name">
+<col class="description">
+</colgroup>
+<tbody><tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a href="YelpView.html#YelpViewState">YelpViewState</a></td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="YelpView.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="screen">    GObject
+    <span class="lineart">╰──</span> GInitiallyUnowned
+        <span class="lineart">╰──</span> GtkWidget
+            <span class="lineart">╰──</span> GtkContainer
+                <span class="lineart">╰──</span> WebKitWebViewBase
+                    <span class="lineart">╰──</span> WebKitWebView
+                        <span class="lineart">╰──</span> YelpView
+</pre>
+</div>
+<div class="refsect1">
+<a name="YelpView.description"></a><h2>Description</h2>
+</div>
+<div class="refsect1">
+<a name="YelpView.functions_details"></a><h2>Functions</h2>
+<div class="refsect2">
+<a name="YelpViewActionValidFunc"></a><h3>YelpViewActionValidFunc ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>
+<span class="c_punctuation">(</span>*YelpViewActionValidFunc<span class="c_punctuation">)</span> (<em class="parameter"><code><span class="type">YelpView</span> *view</code></em>,
+                            <em class="parameter"><code><span class="type">GtkAction</span> *action</code></em>,
+                            <em class="parameter"><code><span class="type">gchar</span> *uri</code></em>,
+                            <em class="parameter"><code><span class="type">gpointer</span> data</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-view-new"></a><h3>yelp_view_new ()</h3>
+<pre class="programlisting"><span class="returnvalue">GtkWidget</span> *
+yelp_view_new (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-view-load"></a><h3>yelp_view_load ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_view_load (<em class="parameter"><code><span class="type">YelpView</span> *view</code></em>,
+                <em class="parameter"><code>const <span class="type">gchar</span> *uri</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-view-load-uri"></a><h3>yelp_view_load_uri ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_view_load_uri (<em class="parameter"><code><span class="type">YelpView</span> *view</code></em>,
+                    <em class="parameter"><code><span class="type">YelpUri</span> *uri</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-view-load-document"></a><h3>yelp_view_load_document ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_view_load_document (<em class="parameter"><code><span class="type">YelpView</span> *view</code></em>,
+                         <em class="parameter"><code><span class="type">YelpUri</span> *uri</code></em>,
+                         <em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-view-get-document"></a><h3>yelp_view_get_document ()</h3>
+<pre class="programlisting"><span class="returnvalue">YelpDocument</span> *
+yelp_view_get_document (<em class="parameter"><code><span class="type">YelpView</span> *view</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-view-register-actions"></a><h3>yelp_view_register_actions ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_view_register_actions (<em class="parameter"><code><span class="type">YelpView</span> *view</code></em>,
+                            <em class="parameter"><code><span class="type">GActionMap</span> *map</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-view-add-link-action"></a><h3>yelp_view_add_link_action ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_view_add_link_action (<em class="parameter"><code><span class="type">YelpView</span> *view</code></em>,
+                           <em class="parameter"><code><span class="type">GtkAction</span> *action</code></em>,
+                           <em class="parameter"><code><a href="YelpView.html#YelpViewActionValidFunc"><span class="type">YelpViewActionValidFunc</span></a> func</code></em>,
+                           <em class="parameter"><code><span class="type">gpointer</span> data</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-view-get-active-link-uri"></a><h3>yelp_view_get_active_link_uri ()</h3>
+<pre class="programlisting"><span class="returnvalue">YelpUri</span> *
+yelp_view_get_active_link_uri (<em class="parameter"><code><span class="type">YelpView</span> *view</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-view-get-active-link-text"></a><h3>yelp_view_get_active_link_text ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_view_get_active_link_text (<em class="parameter"><code><span class="type">YelpView</span> *view</code></em>);</pre>
+</div>
+</div>
+<div class="refsect1">
+<a name="YelpView.other_details"></a><h2>Types and Values</h2>
+<div class="refsect2">
+<a name="YelpViewState"></a><h3>enum YelpViewState</h3>
+<div class="refsect3">
+<a name="YelpViewState.members"></a><h4>Members</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
+</colgroup>
+<tbody>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-VIEW-STATE-BLANK:CAPS"></a>YELP_VIEW_STATE_BLANK</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-VIEW-STATE-LOADING:CAPS"></a>YELP_VIEW_STATE_LOADING</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-VIEW-STATE-LOADED:CAPS"></a>YELP_VIEW_STATE_LOADED</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="YELP-VIEW-STATE-ERROR:CAPS"></a>YELP_VIEW_STATE_ERROR</p></td>
+<td> </td>
+<td> </td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+</div>
+<div class="refsect1">
+<a name="YelpView.property-details"></a><h2>Property Details</h2>
+<div class="refsect2">
+<a name="YelpView--page-desc"></a><h3>The <code class="literal">“page-desc”</code> property</h3>
+<pre class="programlisting">  “page-desc”                <span class="type">gchar</span> *</pre>
+<p>The description of the page being viewed.</p>
+<p>Flags: Read</p>
+<p>Default value: NULL</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="YelpView--page-icon"></a><h3>The <code class="literal">“page-icon”</code> property</h3>
+<pre class="programlisting">  “page-icon”                <span class="type">gchar</span> *</pre>
+<p>The icon of the page being viewed.</p>
+<p>Flags: Read</p>
+<p>Default value: NULL</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="YelpView--page-id"></a><h3>The <code class="literal">“page-id”</code> property</h3>
+<pre class="programlisting">  “page-id”                  <span class="type">gchar</span> *</pre>
+<p>The ID of the root page of the page being viewed.</p>
+<p>Flags: Read</p>
+<p>Default value: NULL</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="YelpView--page-title"></a><h3>The <code class="literal">“page-title”</code> property</h3>
+<pre class="programlisting">  “page-title”               <span class="type">gchar</span> *</pre>
+<p>The title of the page being viewed.</p>
+<p>Flags: Read</p>
+<p>Default value: NULL</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="YelpView--root-title"></a><h3>The <code class="literal">“root-title”</code> property</h3>
+<pre class="programlisting">  “root-title”               <span class="type">gchar</span> *</pre>
+<p>The title of the root page of the page being viewed.</p>
+<p>Flags: Read</p>
+<p>Default value: NULL</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="YelpView--state"></a><h3>The <code class="literal">“state”</code> property</h3>
+<pre class="programlisting">  “state”                    <a href="YelpView.html#YelpViewState"><span class="type">YelpViewState</span></a></pre>
+<p>The loading state of the view.</p>
+<p>Flags: Read / Write</p>
+<p>Default value: YELP_VIEW_STATE_BLANK</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="YelpView--yelp-uri"></a><h3>The <code class="literal">“yelp-uri”</code> property</h3>
+<pre class="programlisting">  “yelp-uri”                 <span class="type">YelpUri</span> *</pre>
+<p>A YelpUri with the current location.</p>
+<p>Flags: Read / Write</p>
+</div>
+</div>
+<div class="refsect1">
+<a name="YelpView.signal-details"></a><h2>Signal Details</h2>
+<div class="refsect2">
+<a name="YelpView-external-uri"></a><h3>The <code class="literal">“external-uri”</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>
+user_function (<span class="type">YelpView</span> *yelpview,
+               <span class="type">YelpUri</span>  *arg1,
+               <span class="type">gpointer</span>  user_data)</pre>
+<p>Flags: Run Last</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="YelpView-loaded"></a><h3>The <code class="literal">“loaded”</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+user_function (<span class="type">YelpView</span> *yelpview,
+               <span class="type">gpointer</span>  user_data)</pre>
+<p>Flags: Run Last</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="YelpView-new-view-requested"></a><h3>The <code class="literal">“new-view-requested”</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+user_function (<span class="type">YelpView</span> *yelpview,
+               <span class="type">YelpUri</span>  *arg1,
+               <span class="type">gpointer</span>  user_data)</pre>
+<p>Flags: Run Last</p>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>Generated by GTK-Doc V1.28</div>
+</body>
+</html>
