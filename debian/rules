@@ -11,7 +11,9 @@ override_dh_auto_clean:
 	rm -f debian/yelp.1
 
 override_dh_auto_configure:
-	dh_auto_configure -- --enable-gtk-doc
+	dh_auto_configure -- \
+	--enable-gtk-doc \
+	--disable-Werror
 
 override_dh_auto_build:
 	dh_auto_build

@@ -1,0 +1,480 @@
+diff --git a/po/ko.po b/po/ko.po
+index 2601aae..388d187 100644
+--- a/po/ko.po
++++ b/po/ko.po
+@@ -291,8 +291,8 @@ msgstr "이 문서가 들어 있는 패키지를 검색합니다."
+ msgid "Turn on editor mode"
+ msgstr "편집기 모드를 켭니다"
+ 
+-#: ../src/yelp-application.c:271 ../src/yelp-window.c:1181
+-#: ../src/yelp-window.c:1189 ../yelp.desktop.in.in.h:1
++#: src/yelp-application.c:270 src/yelp-window.c:1188 src/yelp-window.c:1196
++#: src/yelp.c:48 yelp.desktop.in:3
+ msgid "Help"
+ msgstr "도움말"
+ 
+@@ -361,6 +361,10 @@ msgstr "책갈피 추가"
+ msgid "Remove Bookmark"
+ msgstr "책갈피 제거"
+ 
++#: src/yelp.c:69
++msgid "Help is being prepared."
++msgstr "도움말 준비 중 입니다."
++
+ #: ../yelp.desktop.in.in.h:2
+ msgid "Get help with GNOME"
+ msgstr "그놈에서 도움말을 봅니다"
+diff --git a/po/yelp.pot b/po/yelp.pot
+deleted file mode 100644
+index 2c97052..0000000
+--- a/po/yelp.pot
++++ /dev/null
+@@ -1,356 +0,0 @@
+-# SOME DESCRIPTIVE TITLE.
+-# Copyright (C) YEAR Yelp Team and others. See AUTHORS
+-# This file is distributed under the same license as the yelp package.
+-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+-#
+-#, fuzzy
+-msgid ""
+-msgstr ""
+-"Project-Id-Version: yelp 3.31.90\n"
+-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?product=yelp\n"
+-"POT-Creation-Date: 2019-02-04 12:06-0500\n"
+-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+-"Language-Team: LANGUAGE <LL@li.org>\n"
+-"Language: \n"
+-"MIME-Version: 1.0\n"
+-"Content-Type: text/plain; charset=UTF-8\n"
+-"Content-Transfer-Encoding: 8bit\n"
+-
+-#. (itstool) path: msg/msgstr
+-#. ID: install.tooltip
+-#. This is a format message used to format tooltips on install: links. These
+-#. links allow users to install packages by clicking a link in the help. The
+-#. tooltip may also be used as the link text, if there's no link text in the
+-#. document. Special elements in the message will be replaced with the
+-#. appropriate content, as follows:
+-#.
+-#. <string/> - The package to install
+-#.
+-#: data/domains/yelp.xml.in:36
+-msgid "Install <string/>"
+-msgstr ""
+-
+-#: data/yelp.appdata.xml.in:6
+-msgid "GNOME Help"
+-msgstr ""
+-
+-#: data/yelp.appdata.xml.in:7
+-msgid "Help viewer for GNOME"
+-msgstr ""
+-
+-#: data/yelp.appdata.xml.in:9
+-msgid ""
+-"Yelp is the GNOME help viewer. It is the default Mallard viewer, but it can "
+-"also display DocBook, info, man, and HTML documentation."
+-msgstr ""
+-
+-#: data/yelp.appdata.xml.in:13
+-msgid ""
+-"It makes it easy to find the documentation you need, with interactive search "
+-"and bookmarks."
+-msgstr ""
+-
+-#: data/yelp.appdata.xml.in:17
+-msgid ""
+-"It also has an editor mode, which shows editorial comments and revision "
+-"statuses when editing Mallard documents."
+-msgstr ""
+-
+-#: data/yelp.appdata.xml.in:30
+-msgid "The GNOME Project"
+-msgstr ""
+-
+-#: libyelp/yelp-bz2-decompressor.c:143 libyelp/yelp-lzma-decompressor.c:152
+-msgid "Invalid compressed data"
+-msgstr ""
+-
+-#: libyelp/yelp-bz2-decompressor.c:149 libyelp/yelp-lzma-decompressor.c:158
+-msgid "Not enough memory"
+-msgstr ""
+-
+-#: libyelp/yelp-docbook-document.c:292 libyelp/yelp-info-document.c:221
+-#: libyelp/yelp-mallard-document.c:306 libyelp/yelp-mallard-document.c:464
+-#: libyelp/yelp-man-document.c:199
+-#, c-format
+-msgid "The page ‘%s’ was not found in the document ‘%s’."
+-msgstr ""
+-
+-#: libyelp/yelp-docbook-document.c:331 libyelp/yelp-info-document.c:358
+-#: libyelp/yelp-man-document.c:336
+-msgid "The file does not exist."
+-msgstr ""
+-
+-#: libyelp/yelp-docbook-document.c:341 libyelp/yelp-info-document.c:368
+-#: libyelp/yelp-man-document.c:346
+-#, c-format
+-msgid "The file ‘%s’ does not exist."
+-msgstr ""
+-
+-#: libyelp/yelp-docbook-document.c:359
+-#, c-format
+-msgid ""
+-"The file ‘%s’ could not be parsed because it is not a well-formed XML "
+-"document."
+-msgstr ""
+-
+-#: libyelp/yelp-docbook-document.c:372
+-#, c-format
+-msgid ""
+-"The file ‘%s’ could not be parsed because one or more of its included files "
+-"is not a well-formed XML document."
+-msgstr ""
+-
+-#: libyelp/yelp-docbook-document.c:810
+-msgid "Unknown"
+-msgstr ""
+-
+-#: libyelp/yelp-docbook-document.c:908 libyelp/yelp-info-document.c:301
+-#: libyelp/yelp-man-document.c:279
+-#, c-format
+-msgid "The requested page was not found in the document ‘%s’."
+-msgstr ""
+-
+-#: libyelp/yelp-document.c:1068
+-#, c-format
+-msgid "Search results for “%s”"
+-msgstr ""
+-
+-#: libyelp/yelp-document.c:1080
+-#, c-format
+-msgid "No matching help pages found in “%s”."
+-msgstr ""
+-
+-#: libyelp/yelp-document.c:1086
+-msgid "No matching help pages found."
+-msgstr ""
+-
+-#: libyelp/yelp-error.c:35
+-msgid "An unknown error occurred."
+-msgstr ""
+-
+-#: libyelp/yelp-help-list.c:548 libyelp/yelp-help-list.c:557
+-msgid "All Help Documents"
+-msgstr ""
+-
+-#: libyelp/yelp-info-document.c:383
+-#, c-format
+-msgid ""
+-"The file ‘%s’ could not be parsed because it is not a well-formed info page."
+-msgstr ""
+-
+-#: libyelp/yelp-mallard-document.c:348
+-#, c-format
+-msgid "The directory ‘%s’ does not exist."
+-msgstr ""
+-
+-#: libyelp/yelp-search-entry.c:434
+-#, c-format
+-msgid "Search for “%s”"
+-msgstr ""
+-
+-#: libyelp/yelp-transform.c:369 libyelp/yelp-transform.c:384
+-#, c-format
+-msgid "The XSLT stylesheet ‘%s’ is either missing or not valid."
+-msgstr ""
+-
+-#: libyelp/yelp-transform.c:518
+-msgid "No href attribute found on yelp:document\n"
+-msgstr ""
+-
+-#: libyelp/yelp-transform.c:533
+-msgid "Out of memory"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:248
+-msgid "C_opy Code Block"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:253
+-msgid "_Copy Link Location"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:258
+-msgid "_Open Link"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:263
+-msgid "Open Link in New _Window"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:273
+-msgid "_Install Packages"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:278
+-msgid "Save Code _Block As…"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:293
+-msgid "_Copy Text"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:805 libyelp/yelp-view.c:2138
+-#, c-format
+-msgid "The URI ‘%s’ does not point to a valid page."
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:811 libyelp/yelp-view.c:2144
+-msgid "The URI does not point to a valid page."
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:816 libyelp/yelp-view.c:2150
+-#, c-format
+-msgid "The URI ‘%s’ could not be parsed."
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:821
+-msgid "Unknown Error."
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:975
+-msgid "You do not have PackageKit. Package install links require PackageKit."
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:1222
+-msgid "Save Image"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:1321
+-msgid "Save Code"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:1417
+-#, c-format
+-msgid "Send email to %s"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:1521
+-msgid "_Save Image As…"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:1522
+-msgid "_Save Video As…"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:1530
+-msgid "S_end Image To…"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:1531
+-msgid "S_end Video To…"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:1872
+-#, c-format
+-msgid "Could not load a document for ‘%s’"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:1878
+-msgid "Could not load a document"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:1962
+-msgid "Document Not Found"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:1964
+-msgid "Page Not Found"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:1967
+-msgid "Cannot Read"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:1973
+-msgid "Unknown Error"
+-msgstr ""
+-
+-#: libyelp/yelp-view.c:1993
+-msgid "Search for packages containing this document."
+-msgstr ""
+-
+-#: src/yelp-application.c:59
+-msgid "Turn on editor mode"
+-msgstr ""
+-
+-#: src/yelp-application.c:270 src/yelp-window.c:1188 src/yelp-window.c:1196
+-#: yelp.desktop.in:3
+-msgid "Help"
+-msgstr ""
+-
+-#: src/yelp-window.c:343
+-msgid "Back"
+-msgstr ""
+-
+-#: src/yelp-window.c:350
+-msgid "Forward"
+-msgstr ""
+-
+-#: src/yelp-window.c:361
+-msgid "Menu"
+-msgstr ""
+-
+-#: src/yelp-window.c:366
+-msgid "New Window"
+-msgstr ""
+-
+-#: src/yelp-window.c:367
+-msgid "Find…"
+-msgstr ""
+-
+-#: src/yelp-window.c:368
+-msgid "Print…"
+-msgstr ""
+-
+-#: src/yelp-window.c:373
+-msgid "Previous Page"
+-msgstr ""
+-
+-#: src/yelp-window.c:374
+-msgid "Next Page"
+-msgstr ""
+-
+-#: src/yelp-window.c:379
+-msgid "Larger Text"
+-msgstr ""
+-
+-#: src/yelp-window.c:380
+-msgid "Smaller Text"
+-msgstr ""
+-
+-#: src/yelp-window.c:385
+-msgid "All Help"
+-msgstr ""
+-
+-#: src/yelp-window.c:407
+-msgid "Search (Ctrl+S)"
+-msgstr ""
+-
+-#: src/yelp-window.c:424
+-msgid "Bookmarks"
+-msgstr ""
+-
+-#: src/yelp-window.c:441
+-msgid "No bookmarks"
+-msgstr ""
+-
+-#: src/yelp-window.c:449
+-msgid "Add Bookmark"
+-msgstr ""
+-
+-#: src/yelp-window.c:455
+-msgid "Remove Bookmark"
+-msgstr ""
+-
+-#: yelp.desktop.in:4
+-msgid "Get help with GNOME"
+-msgstr ""
+-
+-#: yelp.desktop.in:5
+-msgid "documentation;information;manual;help;"
+-msgstr ""
+-
+-#: yelp.desktop.in:8
+-msgid "org.gnome.Yelp"
+-msgstr ""
+diff --git a/src/yelp.c b/src/yelp.c
+index 9045c35..5e74f89 100644
+--- a/src/yelp.c
++++ b/src/yelp.c
+@@ -30,17 +30,75 @@
+ 
+ #include "yelp-application.h"
+ 
++static gboolean
++show_help_idle (gpointer data)
++{
++	char *markup;
++	const char *sorry;
++	GtkWidget *dialog;
++	GtkWidget *content_area, *message_area, *parent, *icon;
++
++	dialog = gtk_message_dialog_new (NULL,
++			GTK_DIALOG_DESTROY_WITH_PARENT,
++			GTK_MESSAGE_INFO,
++			GTK_BUTTONS_OK,
++			NULL);
++
++	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER_ALWAYS);
++	gtk_window_set_title (GTK_WINDOW (dialog), _("Help"));
++
++	content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
++	message_area = gtk_message_dialog_get_message_area (GTK_MESSAGE_DIALOG (dialog));
++
++	gtk_box_set_spacing (GTK_BOX (content_area), 0);
++	gtk_widget_set_valign (message_area, GTK_ALIGN_CENTER);
++
++	parent = gtk_widget_get_parent (message_area);
++	gtk_widget_set_margin_start (parent, 18);
++	gtk_widget_set_margin_end (parent, 18);
++	gtk_widget_set_margin_top (parent, 12);
++	gtk_widget_set_margin_bottom (parent, 12);
++	gtk_box_set_spacing (GTK_BOX (parent), 18);
++
++	icon = gtk_image_new_from_icon_name ("dialog-information", GTK_ICON_SIZE_DIALOG);
++	gtk_widget_set_halign (icon, GTK_ALIGN_CENTER);
++	gtk_widget_set_valign (icon, GTK_ALIGN_START);
++	gtk_container_add (GTK_CONTAINER (parent), icon);
++	gtk_box_reorder_child (GTK_BOX (parent), icon, 0);
++
++	sorry = _("Help is being prepared.");
++	markup = g_markup_printf_escaped ("<span weight=\"bold\" size=\"larger\">%s</span>", sorry);
++    gtk_message_dialog_set_markup (GTK_MESSAGE_DIALOG (dialog), markup);
++	g_free (markup);
++
++	gtk_widget_show_all (dialog);
++	gtk_dialog_run (GTK_DIALOG (dialog));
++	gtk_widget_destroy (dialog);
++
++	gtk_main_quit ();
++
++	return FALSE;
++}
++
+ int
+ main (int argc, char **argv) 
+ {
+-    YelpApplication *app;
++//    YelpApplication *app;
+ 
+     setlocale (LC_ALL, "");
+     textdomain (GETTEXT_PACKAGE);
+     bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+ 
+-    app = yelp_application_new ();
++	gtk_init (&argc, &argv);
++
++	g_idle_add ((GSourceFunc)show_help_idle, NULL);
++
++	gtk_main ();
++
++	return 0;
++
++//    app = yelp_application_new ();
+ 
+-    return g_application_run (G_APPLICATION (app), argc, argv);
++//    return g_application_run (G_APPLICATION (app), argc, argv);
+ }
+diff --git a/yelp.desktop.in b/yelp.desktop.in
+index a3d839c..6509fa0 100644
+--- a/yelp.desktop.in
++++ b/yelp.desktop.in
+@@ -10,3 +10,4 @@ Terminal=false
+ Type=Application
+ Categories=GNOME;GTK;Core;Documentation;Utility;
+ MimeType=x-scheme-handler/ghelp;x-scheme-handler/help;x-scheme-handler/info;x-scheme-handler/man;
++NoDisplay=true
