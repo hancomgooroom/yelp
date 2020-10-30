@@ -1,0 +1,1385 @@
+diff --git a/libyelp/yelp-document.c b/libyelp/yelp-document.c
+index 83582ea..80d7313 100644
+--- a/libyelp/yelp-document.c
++++ b/libyelp/yelp-document.c
+@@ -1004,7 +1004,7 @@ document_read_contents (YelpDocument *document,
+         colors = yelp_settings_get_colors (yelp_settings_get_default ());
+         g_string_append_printf (ret,
+                                 "html { height: 100%%; } "
+-                                "body { margin: 0; padding: 0;"
++                                "body { margin-left:15px;margin-right:30px;margin-top:20px;margin-bottom:20px; padding: 0;"
+                                 " background-color: %s; color: %s;"
+                                 " direction: %s; } "
+                                 "div.header { margin-bottom: 1em; } "
+diff --git a/libyelp/yelp-help-list.c b/libyelp/yelp-help-list.c
+index cbac98b..332de87 100644
+--- a/libyelp/yelp-help-list.c
++++ b/libyelp/yelp-help-list.c
+@@ -30,12 +30,11 @@
+ #include <libxml/xinclude.h>
+ #include <libxml/xpath.h>
+ #include <libxml/xpathInternals.h>
++#include <libxml/HTMLparser.h>
+ 
+ #include "yelp-help-list.h"
+ #include "yelp-settings.h"
+ 
+-typedef struct _HelpListEntry HelpListEntry;
+-
+ static void           yelp_help_list_dispose         (GObject               *object);
+ static void           yelp_help_list_finalize        (GObject               *object);
+ 
+@@ -52,22 +51,14 @@ static void           help_list_process_docbook      (YelpHelpList          *lis
+                                                       HelpListEntry         *entry);
+ static void           help_list_process_mallard      (YelpHelpList          *list,
+                                                       HelpListEntry         *entry);
++static void           help_list_process_html      (YelpHelpList          *list,
++                                                      HelpListEntry         *entry);
+ 
+ static const char*const known_vendor_prefixes[] = { "gnome",
+                                                     "fedora",
+                                                     "mozilla",
+                                                     NULL };
+ 
+-struct _HelpListEntry
+-{
+-    gchar *id;
+-    gchar *title;
+-    gchar *desc;
+-    gchar *icon;
+-
+-    gchar *filename;
+-    YelpUriDocumentType type;
+-};
+ static void
+ help_list_entry_free (HelpListEntry *entry)
+ {
+@@ -103,6 +94,7 @@ struct _YelpHelpListPrivate {
+     xmlXPathCompExprPtr  get_docbook_title;
+     xmlXPathCompExprPtr  get_mallard_title;
+     xmlXPathCompExprPtr  get_mallard_desc;
++    xmlXPathCompExprPtr  get_html_title;
+ };
+ 
+ static void
+@@ -138,6 +130,7 @@ yelp_help_list_init (YelpHelpList *list)
+     priv->get_mallard_title = xmlXPathCompile (BAD_CAST "normalize-space((/mal:page/mal:info/mal:title[@type='text'] |"
+                                                "                 /mal:page/mal:title)[1])");
+     priv->get_mallard_desc = xmlXPathCompile (BAD_CAST "normalize-space(/mal:page/mal:info/mal:desc[1])");
++    priv->get_html_title = xmlXPathCompile (BAD_CAST "normalize-space(/html:HEAD//html:title)");
+ 
+     yelp_document_set_page_id ((YelpDocument *) list, NULL, "index");
+     yelp_document_set_page_id ((YelpDocument *) list, "index", "index");
+@@ -163,6 +156,8 @@ yelp_help_list_finalize (GObject *object)
+         xmlXPathFreeCompExpr (priv->get_mallard_title);
+     if (priv->get_mallard_desc)
+         xmlXPathFreeCompExpr (priv->get_mallard_desc);
++    if (priv->get_html_title)
++        xmlXPathFreeCompExpr (priv->get_html_title);
+ 
+     G_OBJECT_CLASS (yelp_help_list_parent_class)->finalize (object);
+ }
+@@ -218,8 +213,15 @@ help_list_request_page (YelpDocument          *document,
+     return TRUE;
+ }
+ 
+-static void
+-help_list_think (YelpHelpList *list)
++GList *
++help_list_get_all_entries (YelpDocument *list)
++{
++    YelpHelpListPrivate *priv = GET_PRIV (list);
++    return priv->all_entries;
++}
++
++void
++help_list_entries_init (YelpHelpList *list)
+ {
+     const gchar * const *sdatadirs = g_get_system_data_dirs ();
+     const gchar * const *langs = g_get_language_names ();
+@@ -227,13 +229,12 @@ help_list_think (YelpHelpList *list)
+     /* The strings are still owned by GLib; we just own the array. */
+     gchar **datadirs;
+     gint datadir_i, lang_i;
+-    GList *cur;
+-    GtkIconTheme *theme;
+ 
+     datadirs = g_new0 (gchar *, g_strv_length ((gchar **) sdatadirs) + 2);
+     datadirs[0] = (gchar *) g_get_user_data_dir ();
+-    for (datadir_i = 0; sdatadirs[datadir_i]; datadir_i++)
++    for (datadir_i = 0; sdatadirs[datadir_i]; datadir_i++) {
+         datadirs[datadir_i + 1] = (gchar *) sdatadirs[datadir_i];
++    }
+ 
+     for (datadir_i = 0; datadirs[datadir_i]; datadir_i++) {
+         gchar *helpdirname = g_build_filename (datadirs[datadir_i], "gnome", "help", NULL);       
+@@ -366,6 +367,18 @@ help_list_think (YelpHelpList *list)
+                 }
+                 g_free (filename);
+ 
++                filename = g_build_filename (langdirname,
++                                             g_file_info_get_name (child),
++                                             "index.html",
++                                             NULL);
++                if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
++                    entry = g_new0 (HelpListEntry, 1);
++                    entry->id = docid;
++                    entry->filename = filename;
++                    entry->type = YELP_URI_DOCUMENT_TYPE_HTML;
++                    goto found;                   
++                }
++
+                 g_free (docid);
+             found:
+                 g_object_unref (child);
+@@ -373,12 +386,34 @@ help_list_think (YelpHelpList *list)
+                     g_hash_table_insert (priv->entries, docid, entry);
+                     priv->all_entries = g_list_prepend (priv->all_entries, entry);
+                 }
++
++                if (entry->type == YELP_URI_DOCUMENT_TYPE_MALLARD)
++                    help_list_process_mallard (list, entry);
++                else if (entry->type == YELP_URI_DOCUMENT_TYPE_DOCBOOK)
++                    help_list_process_docbook (list, entry);
++                else if (entry->type == YELP_URI_DOCUMENT_TYPE_HTML)
++                    help_list_process_html (list, entry);
++
+             }
+ 
+             g_object_unref (children);
+         }
+     }
++
++    priv->all_entries = g_list_sort (priv->all_entries,
++                                     (GCompareFunc) help_list_entry_cmp);
+     g_free (datadirs);
++}
++
++static void
++help_list_think (YelpHelpList *list)
++{
++    YelpHelpListPrivate *priv = GET_PRIV (list);
++    /* The strings are still owned by GLib; we just own the array. */
++    GList *cur;
++    GtkIconTheme *theme;
++
++    help_list_entries_init (list);
+ 
+     theme = gtk_icon_theme_get_default ();
+     for (cur = priv->all_entries; cur != NULL; cur = cur->next) {
+@@ -387,11 +422,6 @@ help_list_think (YelpHelpList *list)
+         HelpListEntry *entry = (HelpListEntry *) cur->data;
+         const gchar *entryid = strchr (entry->id, ':') + 1;
+ 
+-        if (entry->type == YELP_URI_DOCUMENT_TYPE_MALLARD)
+-            help_list_process_mallard (list, entry);
+-        else if (entry->type == YELP_URI_DOCUMENT_TYPE_DOCBOOK)
+-            help_list_process_docbook (list, entry);
+-
+         tmp = g_strconcat (entryid, ".desktop", NULL);
+         app = g_desktop_app_info_new (tmp);
+         g_free (tmp);
+@@ -687,3 +717,68 @@ help_list_process_mallard (YelpHelpList  *list,
+     if (xpath)
+         xmlXPathFreeContext (xpath);
+ }
++
++static gchar*
++help_list_get_html_title (xmlNode *root)
++{
++    xmlNode *node = NULL;
++    xmlAttr *attr = NULL;
++    gchar   *value = NULL;
++
++    for (node = root; node; node = node->next) {
++        attr = node->properties;
++
++        while (attr && attr->name && attr->children) {
++            /* find id attribute */
++            if (0 == g_strcmp0 ((gchar *)(attr->name), "id")) {
++                gchar *at = (gchar *)xmlNodeListGetString (node->doc, attr->children, 1);
++                /* if id content is title... */
++                if (0 == g_strcmp0(at, "title")) {
++                    value = (gchar*)xmlNodeGetContent (node);
++
++                    g_free (at);
++                    return value;
++                }
++                g_free (at);
++            }
++            attr = attr->next;
++        }
++
++        value = help_list_get_html_title (node->children);
++        if (value)
++            break;
++    }
++
++    return value;
++}
++
++static void
++help_list_process_html (YelpHelpList  *list,
++                        HelpListEntry *entry)
++{
++    htmlDocPtr doc;
++    xmlNode *root = NULL;
++    doc = htmlReadFile ((const char *)entry->filename, NULL,
++                        HTML_PARSE_NOBLANKS |
++                        HTML_PARSE_NOERROR | 
++                        HTML_PARSE_NOWARNING | 
++                        HTML_PARSE_NONET);
++
++    if (!doc)
++        return;
++
++    root = xmlDocGetRootElement (doc);
++    if (root == NULL) {
++        xmlFreeDoc (doc);
++        return;
++    }
++
++    entry->title = help_list_get_html_title (root->children);
++
++    if (doc)
++        xmlFreeDoc (doc);
++
++    xmlCleanupParser ();
++
++    return;
++}
+diff --git a/libyelp/yelp-help-list.h b/libyelp/yelp-help-list.h
+index 07773c0..5aa73f9 100644
+--- a/libyelp/yelp-help-list.h
++++ b/libyelp/yelp-help-list.h
+@@ -34,6 +34,18 @@
+ 
+ typedef struct _YelpHelpList      YelpHelpList;
+ typedef struct _YelpHelpListClass YelpHelpListClass;
++typedef struct _HelpListEntry     HelpListEntry;
++
++struct _HelpListEntry
++{
++    gchar *id;
++    gchar *title;
++    gchar *desc;
++    gchar *icon;
++
++    gchar *filename;
++    YelpUriDocumentType type;
++};
+ 
+ struct _YelpHelpList {
+     YelpDocument      parent;
+@@ -45,5 +57,7 @@ struct _YelpHelpListClass {
+ 
+ GType           yelp_help_list_get_type     (void);
+ YelpDocument *  yelp_help_list_new          (YelpUri *uri);
++GList *         help_list_get_all_entries   (YelpDocument *list);
++void            help_list_entries_init      (YelpHelpList *list);
+ 
+ #endif /* __YELP_HELP_LIST_H__ */
+diff --git a/libyelp/yelp-mallard-document.c b/libyelp/yelp-mallard-document.c
+index b156558..0f4a39b 100644
+--- a/libyelp/yelp-mallard-document.c
++++ b/libyelp/yelp-mallard-document.c
+@@ -266,7 +266,6 @@ mallard_request_page (YelpDocument         *document,
+ 
+     debug_print (DB_FUNCTION, "entering\n");
+     debug_print (DB_ARG, "    page_id=\"%s\"\n", page_id);
+-
+     if (page_id == NULL)
+         page_id = "index";
+ 
+diff --git a/libyelp/yelp-man-parser.c b/libyelp/yelp-man-parser.c
+index 302ccb3..0217987 100644
+--- a/libyelp/yelp-man-parser.c
++++ b/libyelp/yelp-man-parser.c
+@@ -832,6 +832,7 @@ parse_n (YelpManParser *parser, GError **error)
+         xmlNewTextChild (parser->section_node, NULL,
+                          BAD_CAST "title",
+                          BAD_CAST parser->accumulator->str);
++
+         g_string_truncate (parser->accumulator, 0);
+ 
+         parser->section_state = SECTION_BODY;
+diff --git a/libyelp/yelp-simple-document.c b/libyelp/yelp-simple-document.c
+index 595efa8..e019fad 100644
+--- a/libyelp/yelp-simple-document.c
++++ b/libyelp/yelp-simple-document.c
+@@ -195,9 +195,12 @@ document_request_page (YelpDocument         *document,
+     request->callback = callback;
+     request->user_data = user_data;
+ 
+-    request->cancellable = g_object_ref (cancellable);
+-    g_signal_connect (cancellable, "cancelled",
+-		      G_CALLBACK (request_cancel), request);
++    if (cancellable) {
++        request->cancellable = g_object_ref (cancellable);
++
++        g_signal_connect (cancellable, "cancelled",
++	    	      G_CALLBACK (request_cancel), request);
++    }
+ 
+     simple->priv->reqs = g_slist_prepend (simple->priv->reqs, request);
+ 
+@@ -379,7 +382,14 @@ stream_read_cb (GInputStream       *stream,
+ 	   byte.  I'm 99.99% certain I'm right.
+ 	 */
+ 	g_assert (document->priv->contents_read < document->priv->contents_len);
+-	document->priv->contents[document->priv->contents_read + 1] = '\0';
++
++  // 메모리를 재할당 하는 로직으로 파싱 속도가 느려질 수 있음...
++  // 확인 후 이상 없는 경우 아래와 같이 수정.
++  //document->priv->contents[document->priv->contents_len] = '\0';
++  document->priv->contents_len = document->priv->contents_read + 1;
++  document->priv->contents = g_realloc (document->priv->contents,
++                  document->priv->contents_len);
++  document->priv->contents[document->priv->contents_len - 1] = '\0';
+ 	g_input_stream_close_async (document->priv->stream,
+ 				    G_PRIORITY_DEFAULT,
+ 				    NULL,
+diff --git a/libyelp/yelp-uri.c b/libyelp/yelp-uri.c
+index f20b167..05a8666 100644
+--- a/libyelp/yelp-uri.c
++++ b/libyelp/yelp-uri.c
+@@ -205,8 +205,9 @@ yelp_uri_new_relative (YelpUri *base, const gchar *arg)
+ 
+     priv = GET_PRIV (uri);
+     priv->doctype = YELP_URI_DOCUMENT_TYPE_UNRESOLVED;
+-    if (base)
++    if (base){
+         priv->res_base = g_object_ref (base);
++        }
+     priv->res_arg = g_strdup (arg);
+ 
+     return uri;
+@@ -313,7 +314,15 @@ resolve_sync (YelpUri *uri)
+         resolve_ghelp_uri (uri);
+     }
+     else if (g_str_has_prefix (priv->res_arg, "help:")) {
+-        resolve_help_uri (uri);
++    //jeong
++        //if (priv->res_base) {
++        //    YelpUriPrivate *base_priv = GET_PRIV (priv->res_base);
++        //    if (base_priv->doctype == YELP_URI_DOCUMENT_TYPE_HTML ||
++        //        base_priv->doctype == YELP_URI_DOCUMENT_TYPE_EXTERNAL)
++        //        resolve_file_path (uri);
++        //}
++        //else
++            resolve_help_uri (uri);
+     }
+     else if (g_str_has_prefix (priv->res_arg, "help-list:")) {
+         resolve_help_list_uri (uri);
+@@ -695,6 +704,27 @@ resolve_data_dirs (YelpUri      *ret,
+                 }
+                 g_free (filename);
+             }
++//jeong
++            //if (langfirst) {
++            //    filename = g_strdup_printf ("%s/index.html", helpdir);
++            //    if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
++            //        priv->tmptype = YELP_URI_DOCUMENT_TYPE_HTML;
++            //        continue;
++            //    }
++            //    g_free (filename);
++            //}
++            //else {
++            //    filename = g_strdup_printf ("%s/%s.html", helpdir, pageid);
++            //    if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
++            //        priv->tmptype = YELP_URI_DOCUMENT_TYPE_EXTERNAL;
++            //        continue;
++            //    }
++            //    //else {
++            //    //    priv->tmptype = YELP_URI_DOCUMENT_TYPE_EXTERNAL;
++            //    //    continue;
++            //    //}
++            //    g_free (filename);
++            //}
+ 
+             filename = g_strdup_printf ("%s/%s.html", helpdir, pageid);
+             if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
+@@ -849,7 +879,7 @@ resolve_help_uri (YelpUri *uri)
+     /* help:document[/page][?query][#frag]
+      */
+     YelpUriPrivate *priv = GET_PRIV (uri);
+-    gchar *document, *slash, *query, *hash;
++    gchar *document, *slash, *query, *hash, *dot;
+     gchar *colon, *c; /* do not free */
+ 
+     colon = strchr (priv->res_arg, ':');
+@@ -858,7 +888,7 @@ resolve_help_uri (YelpUri *uri)
+         return;
+     }
+ 
+-    slash = query = hash = NULL;
++    dot = slash = query = hash = NULL;
+     for (c = colon; *c != '\0'; c++) {
+         if (*c == '#' && hash == NULL)
+             hash = c;
+@@ -866,6 +896,8 @@ resolve_help_uri (YelpUri *uri)
+             query = c;
+         else if (*c == '/' && slash == NULL && query == NULL && hash == NULL)
+             slash = c;
++        else if (*c == '.')
++            dot = c;
+     }
+ 
+     if (slash || query || hash)
+@@ -879,6 +911,9 @@ resolve_help_uri (YelpUri *uri)
+                            (query ? query : hash) - slash - 1);
+     else if (slash)
+         slash = g_strdup (slash + 1);
++//jeong
++    if (slash && dot)
++        slash = g_strndup (slash, strlen (slash) - strlen (dot));
+ 
+     if (query && hash)
+         query = g_strndup (query + 1,
+diff --git a/libyelp/yelp-view.c b/libyelp/yelp-view.c
+index f9da4fb..d68d593 100644
+--- a/libyelp/yelp-view.c
++++ b/libyelp/yelp-view.c
+@@ -754,7 +754,6 @@ document_callback (YelpDocument       *document,
+     }
+ 
+     mime_type = yelp_document_get_mime_type (document, data->page_id);
+-
+     contents = yelp_document_read_contents (document, data->page_id);
+ 
+     content_length = strlen (contents);
+@@ -790,6 +789,7 @@ help_cb_uri_resolved (YelpUri                *uri,
+                                     (YelpDocumentCallback) document_callback,
+                                     data,
+                                     (GDestroyNotify) request_async_data_free);
++
+         g_object_unref (document);
+ 
+     } else {
+@@ -1621,7 +1621,6 @@ view_policy_decision_requested (YelpView                *view,
+     }
+ 
+     webkit_policy_decision_ignore (decision);
+-
+     uri = yelp_uri_new_relative (priv->uri, fixed_uri);
+     yelp_view_load_uri ((YelpView *) view, uri);
+     g_object_unref (uri);
+@@ -1987,6 +1986,10 @@ view_show_error_page (YelpView *view,
+             scheme = "ghelp";
+             pkg = struri + 6;
+         }
++        if (pkg != NULL)
++            content_end = g_markup_printf_escaped ("<p><a href='install-%s:%s'>%s</a></p>",
++                                                   scheme, pkg,
++                                                   _("Search for packages containing this document."));
+         g_free (struri);
+     }
+ 
+@@ -2191,8 +2194,9 @@ uri_resolved (YelpUri  *uri,
+             g_object_unref (priv->document);
+         priv->document = document;
+ 
+-        if (priv->load_page_after_resolved)
++        if (priv->load_page_after_resolved) {
+             view_load_page (view);
++        }
+     } else {
+         if (priv->document != NULL) {
+             g_object_unref (priv->document);
+diff --git a/src/yelp-application.c b/src/yelp-application.c
+index 945b517..505c3ed 100644
+--- a/src/yelp-application.c
++++ b/src/yelp-application.c
+@@ -50,8 +50,6 @@ option_version_cb (const gchar *option_name,
+ 	           gpointer     data,
+ 	           GError     **error)
+ {
+-	g_print ("%s %s\n", PACKAGE, VERSION);
+-
+ 	exit (0);
+ }
+ 
+@@ -91,31 +89,36 @@ static void          application_adjust_font           (GAction               *a
+                                                         YelpApplication       *app);
+ static void          application_set_font_sensitivity  (YelpApplication       *app);
+ 
++//static void          yelp_application_ui_init          (YelpApplication       *app);
++
+ static void          bookmarks_changed                 (GSettings             *settings,
+                                                         const gchar           *key,
+                                                         YelpApplication       *app);
+ static gboolean      window_resized                    (YelpWindow            *window,
+                                                         YelpApplication       *app);
+ 
+-G_DEFINE_TYPE_WITH_CODE (YelpApplication, yelp_application, GTK_TYPE_APPLICATION,
+-                         G_IMPLEMENT_INTERFACE (YELP_TYPE_BOOKMARKS,
+-                                                yelp_application_iface_init))
+-#define GET_PRIV(object)(G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_APPLICATION, YelpApplicationPrivate))
+-
+ typedef struct _YelpApplicationPrivate YelpApplicationPrivate;
+ struct _YelpApplicationPrivate {
+-    GSList *windows;
+-    GHashTable *windows_by_document;
++    GSList             *windows;
++    GHashTable         *windows_by_document;
++
++    GPropertyAction    *show_cursor_action;
++    GSimpleAction      *larger_text_action;
++    GSimpleAction      *smaller_text_action;
+ 
+-    GPropertyAction  *show_cursor_action;
+-    GSimpleAction    *larger_text_action;
+-    GSimpleAction    *smaller_text_action;
++    GSettingsBackend   *backend;
++    GSettings          *gsettings;
++    GHashTable         *docsettings;
+ 
+-    GSettingsBackend *backend;
+-    GSettings *gsettings;
+-    GHashTable *docsettings;
++    GtkCssProvider     *provider;
+ };
+ 
++G_DEFINE_TYPE_WITH_CODE (YelpApplication, yelp_application, GTK_TYPE_APPLICATION,
++                         G_ADD_PRIVATE (YelpApplication)
++                         G_IMPLEMENT_INTERFACE (YELP_TYPE_BOOKMARKS,
++                                                yelp_application_iface_init))
++#define GET_PRIV(object)(G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_APPLICATION, YelpApplicationPrivate))
++
+ static void
+ yelp_application_init (YelpApplication *app)
+ {
+@@ -123,7 +126,6 @@ yelp_application_init (YelpApplication *app)
+     priv->docsettings = g_hash_table_new_full (g_str_hash, g_str_equal,
+                                                (GDestroyNotify) g_free,
+                                                (GDestroyNotify) g_object_unref);
+-
+     gtk_application_set_accels_for_action (GTK_APPLICATION (app),
+                                            "app.yelp-application-show-cursor",
+                                            (const gchar*[]) {"F7", NULL});
+@@ -174,7 +176,7 @@ yelp_application_class_init (YelpApplicationClass *klass)
+     object_class->dispose = yelp_application_dispose;
+     object_class->finalize = yelp_application_finalize;
+ 
+-    g_type_class_add_private (klass, sizeof (YelpApplicationPrivate));
++    //g_type_class_add_private (klass, sizeof (YelpApplicationPrivate));
+ }
+ 
+ static void
+@@ -244,6 +246,7 @@ yelp_application_cmdline (GApplication     *app,
+             GFile *base, *new;
+             gchar *cur, *newuri;
+             cur = g_get_current_dir ();
++
+             base = g_file_new_for_path (cur);
+             new = g_file_resolve_relative_path (base, (*arguments)[i]);
+             newuri = g_file_get_uri (new);
+@@ -259,6 +262,25 @@ yelp_application_cmdline (GApplication     *app,
+         ->local_command_line (app, arguments, exit_status);
+ }
+ 
++//static void
++//yelp_application_ui_init (YelpApplication *application)
++//{
++//    static gboolean initialized = FALSE;
++//    YelpApplicationPrivate *priv = GET_PRIV (application);
++//
++//    if (initialized)
++//        return;
++//
++//    initialized = TRUE;
++//
++//    priv->provider = gtk_css_provider_new ();
++//    gtk_style_context_add_provider_for_screen (gdk_screen_get_default (),
++//                    GTK_STYLE_PROVIDER (priv->provider),
++//                    GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
++//
++//    
++//}
++
+ static void
+ yelp_application_startup (GApplication *application)
+ {
+@@ -269,6 +291,9 @@ yelp_application_startup (GApplication *application)
+ 
+     g_set_application_name (N_("Help"));
+ 
++    ///* initialize ui */
++    //yelp_application_ui_init (app);
++
+     /* chain up */
+     G_APPLICATION_CLASS (yelp_application_parent_class)->startup (application);
+ 
+@@ -279,6 +304,7 @@ yelp_application_startup (GApplication *application)
+                                                        g_str_equal,
+                                                        g_free,
+                                                        NULL);
++
+     /* Use a config file for per-document settings, because
+        Ryan asked me to. */
+     keyfile = g_build_filename (g_get_user_config_dir (), "yelp", "yelp.cfg", NULL);
+@@ -508,7 +534,6 @@ application_uri_resolved (YelpUri             *uri,
+     else {
+         g_free (doc_uri);
+     }
+-
+     yelp_window_load_uri (window, uri);
+ 
+     gtk_widget_show_all (GTK_WIDGET (window));
+diff --git a/src/yelp-window.c b/src/yelp-window.c
+index e5abd63..da7638d 100644
+--- a/src/yelp-window.c
++++ b/src/yelp-window.c
+@@ -34,9 +34,16 @@
+ #include "yelp-uri.h"
+ #include "yelp-view.h"
+ 
++#include "yelp-help-list.h"
++
+ #include "yelp-application.h"
+ #include "yelp-window.h"
+ 
++typedef enum {
++    CURSOR_DEFAULT = 0,
++    CURSOR_POINTER,
++}CursorTypeEnum;
++
+ static void          yelp_window_dispose          (GObject            *object);
+ static void          yelp_window_finalize         (GObject            *object);
+ static void          yelp_window_get_property     (GObject            *object,
+@@ -48,6 +55,12 @@ static void          yelp_window_set_property     (GObject            *object,
+                                                    const GValue       *value,
+                                                    GParamSpec         *pspec);
+ 
++static void          window_set_toc_list               (YelpWindow *window);
++static void          yelp_window_toc_items_free         (TocItem *item);
++static gboolean      change_label_css                   (GtkWidget      *label,
++                                                         GtkCssProvider *css);
++static void          change_selection                   (gchar *id, YelpWindow *window);
++
+ static void          window_construct             (YelpWindow         *window);
+ 
+ static gboolean      window_map_event             (YelpWindow         *window,
+@@ -69,6 +82,15 @@ static gboolean      window_key_press             (YelpWindow         *window,
+                                                    GdkEventKey        *event,
+                                                    gpointer            userdata);
+ 
++static gboolean      set_cursor                   (YelpWindow         *window,
++                                                   CursorTypeEnum     type);
++static gboolean      enter_side_button            (GtkButton          *button,
++                                                   GdkEvent           *event,
++                                                   gpointer            data);
++static gboolean      leave_side_button            (GtkButton          *button,
++                                                   GdkEvent           *event,
++                                                   gpointer            data);
++
+ static void          bookmark_activated           (GtkListBox         *box,
+                                                    GtkListBoxRow      *row,
+                                                    YelpWindow         *window);
+@@ -83,9 +105,9 @@ static void          app_bookmarks_changed        (YelpApplication    *app,
+ static void          window_set_bookmarks         (YelpWindow         *window,
+                                                    const gchar        *doc_uri);
+ static void          window_set_bookmark_buttons  (YelpWindow         *window);
+-static void          window_search_mode           (GtkSearchBar       *search_bar,
+-                                                   GParamSpec         *pspec,
+-                                                   YelpWindow         *window);
++//static void          window_search_mode           (GtkSearchBar       *search_bar,
++//                                                   GParamSpec         *pspec,
++//                                                   YelpWindow         *window);
+ 
+ static void          action_new_window            (GSimpleAction      *action,
+                                                    GVariant           *parameter,
+@@ -151,9 +173,6 @@ enum {
+ 
+ static guint signals[LAST_SIGNAL] = { 0 };
+ 
+-G_DEFINE_TYPE (YelpWindow, yelp_window, GTK_TYPE_APPLICATION_WINDOW)
+-#define GET_PRIV(object)(G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_WINDOW, YelpWindowPrivate))
+-
+ typedef struct _YelpWindowPrivate YelpWindowPrivate;
+ struct _YelpWindowPrivate {
+     YelpApplication *application;
+@@ -164,7 +183,6 @@ struct _YelpWindowPrivate {
+     GtkWidget *header;
+     GtkWidget *vbox_view;
+     GtkWidget *vbox_full;
+-    GtkWidget *search_bar;
+     GtkWidget *search_entry;
+     GtkWidget *find_bar;
+     GtkWidget *find_entry;
+@@ -173,7 +191,22 @@ struct _YelpWindowPrivate {
+     GtkWidget *bookmark_list;
+     GtkWidget *bookmark_add;
+     GtkWidget *bookmark_remove;
+-    YelpView *view;
++    YelpView  *view;
++
++    GtkWidget *hbox_main;
++    GtkWidget *vbox_side;
++    GtkWidget *scrolled_wnd;
++    GtkWidget *bbox_toc;
++
++    GtkWidget   *vbox_content;
++    GtkWidget   *stack;
++    GList       *toc_items;
++    GdkCursor   *default_cursor;
++    GdkCursor   *pointer_cursor;
++
++    GtkCssProvider *css;
++    GtkCssProvider *highlight_css;
++    GtkCssProvider *default_css;
+ 
+     GtkWidget *ctrll_entry;
+ 
+@@ -188,6 +221,9 @@ struct _YelpWindowPrivate {
+     gboolean use_header;
+ };
+ 
++G_DEFINE_TYPE_WITH_PRIVATE (YelpWindow, yelp_window, GTK_TYPE_APPLICATION_WINDOW)
++#define GET_PRIV(object)(G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_WINDOW, YelpWindowPrivate))
++
+ static void
+ yelp_window_init (YelpWindow *window)
+ {
+@@ -223,7 +259,7 @@ yelp_window_class_init (YelpWindowClass *klass)
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
+ 
+-    g_type_class_add_private (klass, sizeof (YelpWindowPrivate));
++    //g_type_class_add_private (klass, sizeof (YelpWindowPrivate));
+ }
+ 
+ static void
+@@ -241,6 +277,9 @@ yelp_window_dispose (GObject *object)
+         priv->ctrll_entry = NULL;
+     }
+ 
++    g_clear_object (&priv->default_cursor);
++    g_clear_object (&priv->pointer_cursor);
++
+     G_OBJECT_CLASS (yelp_window_parent_class)->dispose (object);
+ }
+ 
+@@ -248,7 +287,14 @@ static void
+ yelp_window_finalize (GObject *object)
+ {
+     YelpWindowPrivate *priv = GET_PRIV (object);
++
+     g_free (priv->doc_uri);
++    g_list_free_full (priv->toc_items, (GDestroyNotify) yelp_window_toc_items_free);
++
++    g_object_unref (priv->css);
++    g_object_unref (priv->highlight_css);
++    g_object_unref (priv->default_css);
++
+     G_OBJECT_CLASS (yelp_window_parent_class)->finalize (object);
+ }
+ 
+@@ -280,6 +326,7 @@ yelp_window_set_property (GObject     *object,
+     case PROP_APPLICATION:
+         priv->application = g_value_get_object (value);
+         window_construct ((YelpWindow *) object);
++        //window_set_toc ((YelpWindow *) object);
+         break;
+     default:
+         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+@@ -287,16 +334,175 @@ yelp_window_set_property (GObject     *object,
+     }
+ }
+ 
++static gboolean
++change_label_css (GtkWidget      *label,
++                  GtkCssProvider *css)
++{
++     if (css == NULL)
++        return FALSE;
++
++    gtk_style_context_add_provider (gtk_widget_get_style_context (label),
++        GTK_STYLE_PROVIDER (css),
++        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
++
++    return TRUE;
++}
++
++static void
++change_selection (gchar *id, YelpWindow *window)
++{
++    YelpWindowPrivate *priv = GET_PRIV (window);
++    GtkAdjustment *adj = NULL;
++    GtkListBoxRow *row = NULL;
++
++    for (GList *l = g_list_first (priv->toc_items); l != NULL; l = l->next) {
++        TocItem *item = (TocItem*)l->data;
++
++        if (!g_strcmp0 (id, item->id)) {
++            item->checked = TRUE;
++            gtk_list_box_select_row (GTK_LIST_BOX(priv->bbox_toc), GTK_LIST_BOX_ROW (item->row));
++            change_label_css (item->label, priv->highlight_css);
++        }
++        else {
++            if (!item->checked)
++                continue;
++
++            item->checked = FALSE;
++            gtk_list_box_unselect_row (GTK_LIST_BOX(priv->bbox_toc), GTK_LIST_BOX_ROW (item->row));
++            change_label_css (item->label, priv->default_css);
++        }
++    }
++
++    /* scolled to selected row */
++    row = gtk_list_box_get_selected_row (GTK_LIST_BOX (priv->bbox_toc));
++    if (row != NULL) {
++        gint y;
++        gtk_widget_translate_coordinates (GTK_WIDGET (row), priv->bbox_toc, 0, 0, NULL, &y);
++        {
++//            gint height;
++            adj = gtk_list_box_get_adjustment (GTK_LIST_BOX (priv->bbox_toc));
++//            gtk_widget_get_preferred_height (GTK_WIDGET (row), NULL, &height);
++//            height = gtk_widget_get_allocated_height (GTK_WIDGET (row));
++            gtk_adjustment_set_value (adj, y);
++        }
++    }
++}
++
++static void
++yelp_window_clicked_toc (GtkButton *button, gpointer data)
++{
++    TocItem *sel_item = (TocItem*)data;
++    YelpWindow *window = sel_item->window;
++    YelpWindowPrivate *priv = GET_PRIV (window);
++
++    change_selection (sel_item->id, window);
++    
++    yelp_view_load (priv->view, sel_item->id);
++}
++
++static void
++yelp_window_toc_items_free (TocItem *item)
++{
++    g_free (item->title);
++    g_free (item->id);
++    g_free (item);
++}
++
++static void
++window_set_toc_list (YelpWindow *window)
++{
++    YelpWindowPrivate *priv = GET_PRIV (window);
++    YelpUri *uri = yelp_uri_new ("help-list:");
++    YelpDocument *document = NULL;
++    GList *entries = NULL;
++    GList *cur = NULL;
++
++    document = yelp_help_list_new (uri);
++    help_list_entries_init ((YelpHelpList *)document);
++    entries = help_list_get_all_entries (document);
++
++    /* hover & check css for label */
++      priv->highlight_css = gtk_css_provider_new ();
++      gtk_css_provider_load_from_data (priv->highlight_css,
++".vbox-side-button-label {"
++"   font-family: NotoSansCJKkr;"
++"   font-size: 13px;"
++"   font-weight: normal;"
++"   font-style: normal;"
++"   color: #1b6ed0;"
++"}"
++, -1, NULL);
++
++      priv->default_css = gtk_css_provider_new ();
++      gtk_css_provider_load_from_data (priv->default_css,
++".vbox-side-button-label {"
++"   font-family: NotoSansCJKkr;"
++"   font-size: 13px;"
++"   font-weight: normal;"
++"   font-style: normal;"
++"   color: #000000;"
++"}"
++, -1, NULL);
++
++    /*  */
++    for (cur = entries; cur != NULL; cur = cur->next) {
++        HelpListEntry *entry = (HelpListEntry *) cur->data;
++        gchar *title         = entry->title ? g_strdup (entry->title) : (strchr (entry->id, ':') + 1);
++        TocItem *item        = g_new0 (TocItem, 1);
++        GtkWidget *button    = gtk_toggle_button_new ();
++        GtkWidget *label     = gtk_label_new (title);
++        GtkWidget *row       = gtk_list_box_row_new ();
++
++        /* set style class name */
++        gtk_style_context_add_class (gtk_widget_get_style_context (button),
++                                     "vbox-side-button");
++        gtk_style_context_add_class (gtk_widget_get_style_context (label),
++                                     "vbox-side-button-label");
++        gtk_style_context_add_class (gtk_widget_get_style_context (row),
++                                     "toc-list-row");
++
++        /* set label property*/
++        gtk_label_set_line_wrap (GTK_LABEL (label), TRUE);
++        gtk_widget_set_halign (label, GTK_ALIGN_START);
++        //gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
++
++        /* layout */
++        gtk_container_add (GTK_CONTAINER (button), label);
++        gtk_container_add (GTK_CONTAINER (row), button);
++        gtk_list_box_prepend (GTK_LIST_BOX (priv->bbox_toc), row);
++
++        /* set toc item */
++        item->title = g_strdup (title);
++        item->id = g_strdup (entry->id);
++        item->window = window;
++        item->button = button;
++        item->row    = row;
++        item->label = label;
++        item->checked = FALSE;
++
++        /* add in toc item list */
++        priv->toc_items = g_list_prepend (priv->toc_items, item);
++
++        g_signal_connect (button, "clicked", G_CALLBACK (yelp_window_clicked_toc), item);
++        g_signal_connect (button, "enter-notify-event", G_CALLBACK (enter_side_button), item);
++        g_signal_connect (button, "leave-notify-event", G_CALLBACK (leave_side_button), item);
++    }
++
++    g_object_unref (uri);
++}
++
+ static void
+ window_construct (YelpWindow *window)
+ {
+     GtkWidget *box, *button;
+     GtkWidget *frame;
+-    GtkCssProvider *css;
+     GtkSizeGroup *size_group;
+     GMenu *menu, *section;
+     YelpWindowPrivate *priv = GET_PRIV (window);
+     GtkStyleContext *headerbar_context;
++    /* For Cursor */
++    GdkScreen *screen = NULL;
++    GdkDisplay *display = NULL;
+ 
+     const GActionEntry entries[] = {
+         { "yelp-window-new",    action_new_window,   NULL, NULL, NULL },
+@@ -307,6 +513,51 @@ window_construct (YelpWindow *window)
+         { "yelp-window-ctrll",  action_ctrll,        NULL, NULL, NULL },
+     };
+ 
++    /* CSS Provider */
++    priv->css = gtk_css_provider_new ();
++    gtk_css_provider_load_from_data (priv->css,
++".yelp-find-frame {"
++"   background-color: @theme_base_color;"
++"   padding: 6px;"
++"   border-color: @borders;"
++"   border-radius: 0 0 3px 3px;"
++"   border-width: 0 1px 1px 1px;"
++"   border-style: solid;"
++"}"
++".bbox-toc {"
++"	background-color: rgba(0,0,0,0.0);"
++"}"
++".toc-list-row {"
++"   padding-top: 5px;"
++"   padding-bottom: 5px;"
++"	background-color: rgba(0,0,0,0.0);"
++"}"
++".toc-list-row:activate {"
++"	background-color: rgba(201,201,201,0.0);"
++"}"
++".vbox-side {"
++"	background-color: rgba(0,0,0,0.0);"
++"}"
++".vbox-side-button {"
++"	background-color: rgba(201,201,201,0.0);"
++"   border: none;"
++"   border-radius: 6px;"
++"}"
++".vbox-side-button:hover {"
++"	color: rgba(27,110,208,0.6);"
++"}"
++".vbox-side-button-label {"
++"   font-family: NotoSansCJKkr;"
++"   font-size: 13px;"
++"   font-weight: normal;"
++"   font-style: normal;"
++"   color: #000000;"
++"}"
++,-1, NULL);
++    gtk_style_context_add_provider_for_screen (gdk_screen_get_default (),
++                                    GTK_STYLE_PROVIDER (priv->css),
++                                    GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
++
+     gtk_window_set_icon_name (GTK_WINDOW (window), "org.gnome.Yelp");
+ 
+     g_object_get (gtk_settings_get_default (),
+@@ -359,7 +610,7 @@ window_construct (YelpWindow *window)
+     gtk_widget_set_valign (button, GTK_ALIGN_CENTER);
+     gtk_style_context_add_class (gtk_widget_get_style_context (button), "image-button");
+     gtk_widget_set_tooltip_text (button, _("Menu"));
+-    gtk_header_bar_pack_end (GTK_HEADER_BAR (priv->header), button);
++//    gtk_header_bar_pack_end (GTK_HEADER_BAR (priv->header), button);
+ 
+     menu = g_menu_new ();
+     section = g_menu_new ();
+@@ -388,32 +639,61 @@ window_construct (YelpWindow *window)
+ 
+     gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (button), G_MENU_MODEL (menu));
+ 
+-    /** Search **/
+-    priv->vbox_view = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+-    gtk_box_pack_start (GTK_BOX (priv->vbox_full), priv->vbox_view, TRUE, TRUE, 0);
++    /** Frame **/
++    priv->hbox_main = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
++    gtk_box_pack_start (GTK_BOX (priv->vbox_full), priv->hbox_main, TRUE, TRUE, 0);
++
++    priv->vbox_side = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
++    gtk_style_context_add_class (gtk_widget_get_style_context (priv->vbox_side),
++                                 "vbox-side");
++    gtk_widget_set_size_request (priv->vbox_side, 215, -1);
++
++    gtk_box_pack_start (GTK_BOX (priv->hbox_main), priv->vbox_side, FALSE, FALSE, 0);
+ 
+-    priv->search_bar = gtk_search_bar_new ();
+-    gtk_box_pack_start (GTK_BOX (priv->vbox_view), priv->search_bar, FALSE, FALSE, 0);
++    /** Search **/
+     priv->search_entry = yelp_search_entry_new (priv->view,
+                                                 YELP_BOOKMARKS (priv->application));
+-    gtk_entry_set_width_chars (GTK_ENTRY (priv->search_entry), 50);
+-    gtk_container_add (GTK_CONTAINER (priv->search_bar), priv->search_entry);
++
++    gtk_entry_set_width_chars (GTK_ENTRY (priv->search_entry), 20);
++
++
++    //gtk_box_pack_start (GTK_BOX (priv->vbox_side), priv->search_entry, FALSE, TRUE, 15);
++
+     button = gtk_toggle_button_new ();
+     gtk_widget_set_valign (button, GTK_ALIGN_CENTER);
+     gtk_style_context_add_class (gtk_widget_get_style_context (button), "image-button");
+     gtk_button_set_image (GTK_BUTTON (button),
+                           gtk_image_new_from_icon_name ("edit-find-symbolic",
+                                                         GTK_ICON_SIZE_MENU));
+-    gtk_widget_set_tooltip_text (button, _("Search (Ctrl+S)"));
+-    g_object_bind_property (button, "active",
+-                            priv->search_bar, "search-mode-enabled",
+-                            G_BINDING_BIDIRECTIONAL);
+-    g_signal_connect (priv->search_bar, "notify::search-mode-enabled",
+-                      G_CALLBACK (window_search_mode), window);
+-    gtk_header_bar_pack_end (GTK_HEADER_BAR (priv->header), button);
+-
+     g_signal_connect (window, "key-press-event", G_CALLBACK (window_key_press), NULL);
+ 
++    /* Side box scrolled window */
++    priv->scrolled_wnd = gtk_scrolled_window_new (NULL, NULL);
++    gtk_box_pack_end (GTK_BOX (priv->vbox_side), priv->scrolled_wnd, TRUE, TRUE, 0);
++
++//    priv->bbox_toc = gtk_box_new (GTK_ORIENTATION_VERTICAL, 15);
++//    gtk_widget_set_margin_start (priv->bbox_toc, 10);
++//    gtk_widget_set_margin_end (priv->bbox_toc, 15);
++//    gtk_widget_set_margin_top (priv->bbox_toc, 20);
++//    gtk_widget_set_margin_bottom (priv->bbox_toc, 20);
++//    gtk_container_add (GTK_CONTAINER (priv->scrolled_wnd), GTK_WIDGET (priv->bbox_toc));
++    priv->bbox_toc = gtk_list_box_new ();
++
++
++    gtk_style_context_add_class (gtk_widget_get_style_context (priv->bbox_toc),
++                                 "bbox-toc");
++
++    gtk_widget_set_margin_start (priv->bbox_toc, 10);
++    gtk_widget_set_margin_end (priv->bbox_toc, 15);
++    gtk_widget_set_margin_top (priv->bbox_toc, 10);
++    gtk_widget_set_margin_bottom (priv->bbox_toc, 10);
++    gtk_container_add (GTK_CONTAINER (priv->scrolled_wnd), GTK_WIDGET (priv->bbox_toc));
++
++    /* Table of contents */
++    priv->vbox_view = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
++    gtk_box_pack_end (GTK_BOX (priv->hbox_main), priv->vbox_view, TRUE, TRUE, 0);
++    window_set_toc_list ((YelpWindow *) window);
++
+     /** Bookmarks **/
+     button = gtk_menu_button_new ();
+     gtk_widget_set_valign (button, GTK_ALIGN_CENTER);
+@@ -422,7 +702,7 @@ window_construct (YelpWindow *window)
+                           gtk_image_new_from_icon_name ("user-bookmarks-symbolic",
+                                                         GTK_ICON_SIZE_MENU));
+     gtk_widget_set_tooltip_text (button, _("Bookmarks"));
+-    gtk_header_bar_pack_end (GTK_HEADER_BAR (priv->header), button);
++//    gtk_header_bar_pack_end (GTK_HEADER_BAR (priv->header), button);
+ 
+     priv->bookmark_menu = gtk_popover_new (button);
+     g_object_set (priv->bookmark_menu, "border-width", 12, NULL);
+@@ -430,6 +710,7 @@ window_construct (YelpWindow *window)
+ 
+     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 12);
+     gtk_container_add (GTK_CONTAINER (priv->bookmark_menu), box);
++    gtk_widget_hide (priv->bookmark_menu);
+     priv->bookmark_sw = gtk_scrolled_window_new (NULL, NULL);
+     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (priv->bookmark_sw),
+                                     GTK_POLICY_NEVER,
+@@ -463,26 +744,13 @@ window_construct (YelpWindow *window)
+                           G_CALLBACK (app_bookmarks_changed), window);
+ 
+     /** Find **/
+-    css = gtk_css_provider_new ();
++    //css = gtk_css_provider_new ();
+     /* FIXME: Connect to parsing-error signal. */
+-    gtk_css_provider_load_from_data (css,
+-                                     ".yelp-find-frame {"
+-                                     "    background-color: @theme_base_color;"
+-                                     "    padding: 6px;"
+-                                     "    border-color: @borders;"
+-                                     "    border-radius: 0 0 3px 3px;"
+-                                     "    border-width: 0 1px 1px 1px;"
+-                                     "    border-style: solid;"
+-                                     "}",
+-                                     -1, NULL);
+     priv->find_bar = gtk_revealer_new ();
+     frame = gtk_frame_new (NULL);
+     gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_NONE);
+     gtk_style_context_add_class (gtk_widget_get_style_context (frame),
+                                  "yelp-find-frame");
+-    gtk_style_context_add_provider (gtk_widget_get_style_context (frame),
+-                                    GTK_STYLE_PROVIDER (css),
+-                                    GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+     box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+     g_object_set (priv->find_bar,
+                   "halign", GTK_ALIGN_END,
+@@ -493,8 +761,6 @@ window_construct (YelpWindow *window)
+     gtk_container_add (GTK_CONTAINER (frame), box);
+     gtk_container_add (GTK_CONTAINER (priv->find_bar), frame);
+ 
+-    g_object_unref (css);
+-
+     size_group = gtk_size_group_new (GTK_SIZE_GROUP_VERTICAL);
+ 
+     priv->find_entry = gtk_search_entry_new ();
+@@ -525,9 +791,14 @@ window_construct (YelpWindow *window)
+     /** View **/
+     box = gtk_overlay_new ();
+     gtk_overlay_add_overlay (GTK_OVERLAY (box), GTK_WIDGET (priv->find_bar));
++//    gtk_widget_set_margin_start (box, 15);
++//    gtk_widget_set_margin_end (box, 30);
++//    gtk_widget_set_margin_top (box, 20);
++//    gtk_widget_set_margin_bottom (box, 20);
+ 
+     gtk_container_add (GTK_CONTAINER (box), GTK_WIDGET (priv->view));
+     gtk_box_pack_start (GTK_BOX (priv->vbox_view), box, TRUE, TRUE, 0);
++    //gtk_box_pack_start (GTK_BOX (priv->vbox_view), GTK_WIDGET (priv->view), TRUE, TRUE, 0);
+ 
+     g_signal_connect (priv->view, "new-view-requested", G_CALLBACK (view_new_window), window);
+     g_signal_connect (priv->view, "loaded", G_CALLBACK (view_loaded), window);
+@@ -546,6 +817,13 @@ window_construct (YelpWindow *window)
+     gtk_drag_dest_add_uri_targets (GTK_WIDGET (window));
+     g_signal_connect (window, "drag-data-received",
+                       G_CALLBACK (window_drag_received), NULL);
++
++    /* Cursor */
++    screen = gtk_widget_get_screen (GTK_WIDGET (window));
++    display = gdk_screen_get_display (screen);
++    priv->default_cursor = gdk_cursor_new_from_name (display, "default");
++    priv->pointer_cursor = gdk_cursor_new_from_name (display, "pointer");
++
+ }
+ 
+ /******************************************************************************/
+@@ -565,7 +843,6 @@ yelp_window_load_uri (YelpWindow  *window,
+                       YelpUri     *uri)
+ {
+     YelpWindowPrivate *priv = GET_PRIV (window);
+-
+     yelp_view_load_uri (priv->view, uri);
+ }
+ 
+@@ -625,7 +902,7 @@ action_search (GSimpleAction *action,
+     YelpWindowPrivate *priv = GET_PRIV (userdata);
+ 
+     gtk_revealer_set_reveal_child (GTK_REVEALER (priv->find_bar), FALSE);
+-    gtk_search_bar_set_search_mode (GTK_SEARCH_BAR (priv->search_bar), TRUE);
++    //gtk_search_bar_set_search_mode (GTK_SEARCH_BAR (priv->search_bar), TRUE);
+     gtk_widget_grab_focus (priv->search_entry);
+ }
+ 
+@@ -636,7 +913,7 @@ action_find (GSimpleAction *action,
+ {
+     YelpWindowPrivate *priv = GET_PRIV (userdata);
+ 
+-    gtk_search_bar_set_search_mode (GTK_SEARCH_BAR (priv->search_bar), FALSE);
++    //gtk_search_bar_set_search_mode (GTK_SEARCH_BAR (priv->search_bar), FALSE);
+     gtk_revealer_set_reveal_child (GTK_REVEALER (priv->find_bar), TRUE);
+     gtk_widget_grab_focus (priv->find_entry);
+ }
+@@ -673,7 +950,9 @@ action_ctrll (GSimpleAction *action,
+ 
+     gtk_entry_set_text (GTK_ENTRY (priv->ctrll_entry), "");
+ 
+-    gtk_header_bar_set_custom_title (GTK_HEADER_BAR (priv->header), priv->ctrll_entry);
++    //gtk_header_bar_set_custom_title (GTK_HEADER_BAR (priv->header), priv->ctrll_entry);
++    gtk_header_bar_set_title (GTK_HEADER_BAR (priv->header), "ggguide");
++    gtk_widget_set_halign (priv->header, GTK_ALIGN_START);
+     gtk_widget_show (priv->ctrll_entry);
+     gtk_widget_grab_focus (priv->ctrll_entry);
+ 
+@@ -780,9 +1059,71 @@ window_key_press (YelpWindow  *window,
+ 
+     if (gtk_header_bar_get_custom_title (GTK_HEADER_BAR (priv->header)))
+         return FALSE;
++return FALSE;
++//    return gtk_search_bar_handle_event (GTK_SEARCH_BAR (priv->search_bar),
++//                                        (GdkEvent *) event);
++}
+ 
+-    return gtk_search_bar_handle_event (GTK_SEARCH_BAR (priv->search_bar),
+-                                        (GdkEvent *) event);
++static gboolean
++set_cursor (YelpWindow *window, CursorTypeEnum type)
++{
++    GdkCursor *cursor = NULL;
++    YelpWindowPrivate *priv = GET_PRIV (window);
++
++    switch (type) {
++        case CURSOR_DEFAULT:
++            cursor = priv->default_cursor;
++        break;
++        case CURSOR_POINTER:
++            cursor = priv->pointer_cursor;
++        break;
++        default:
++            return TRUE;
++        break;
++    }
++    gdk_window_set_cursor (gtk_widget_get_window (GTK_WIDGET (window)), cursor);
++
++    return FALSE;
++}
++
++static gboolean
++enter_side_button (GtkButton *button,
++                   GdkEvent *event,
++                   gpointer data)
++{
++    TocItem *item = (TocItem*)data;
++    YelpWindowPrivate *priv = GET_PRIV (item->window);
++
++    if (item->checked)
++        goto bail;
++
++    if (!change_label_css (item->label, priv->highlight_css))
++        return FALSE;
++
++bail:
++    return set_cursor ((YelpWindow *)item->window, CURSOR_POINTER);
++}
++
++static gboolean
++leave_side_button (GtkButton *button,
++                   GdkEvent *event,
++                   gpointer data)
++{
++    TocItem *item = (TocItem*)data;
++    YelpWindowPrivate *priv = GET_PRIV (item->window);
++
++    if (item->checked)
++        goto bail;
++
++    if (!change_label_css (item->label, priv->default_css))
++        return FALSE;
++
++    gtk_style_context_add_provider (gtk_widget_get_style_context (item->label),
++        GTK_STYLE_PROVIDER (priv->default_css),
++        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
++
++bail:
++    return set_cursor ((YelpWindow *)item->window, CURSOR_DEFAULT);
+ }
+ 
+ static void
+@@ -1000,16 +1341,16 @@ window_set_bookmark_buttons (YelpWindow *window)
+         g_object_unref (uri);
+ }
+ 
+-static void
+-window_search_mode (GtkSearchBar  *search_bar,
+-                    GParamSpec    *pspec,
+-                    YelpWindow    *window)
+-{
+-    YelpWindowPrivate *priv = GET_PRIV (window);
+-
+-    if (gtk_search_bar_get_search_mode (GTK_SEARCH_BAR (search_bar)))
+-        gtk_revealer_set_reveal_child (GTK_REVEALER (priv->find_bar), FALSE);
+-}
++//static void
++//window_search_mode (GtkSearchBar  *search_bar,
++//                    GParamSpec    *pspec,
++//                    YelpWindow    *window)
++//{
++//    YelpWindowPrivate *priv = GET_PRIV (window);
++//
++//    if (gtk_search_bar_get_search_mode (GTK_SEARCH_BAR (search_bar)))
++//        gtk_revealer_set_reveal_child (GTK_REVEALER (priv->find_bar), FALSE);
++//}
+ 
+ static gboolean
+ find_entry_key_press (GtkEntry    *entry,
+@@ -1094,7 +1435,7 @@ view_loaded (YelpView   *view,
+     YelpUri *uri;
+     gchar *doc_uri;
+     YelpViewState state;
+-    YelpWindowPrivate *priv = GET_PRIV (window);
++//    YelpWindowPrivate *priv = GET_PRIV (window);
+ 
+     g_object_get (view,
+                   "yelp-uri", &uri,
+@@ -1109,14 +1450,16 @@ view_loaded (YelpView   *view,
+                       "page-icon", &icon,
+                       "page-title", &title,
+                       NULL);
+-        if (!g_str_has_prefix (page_id, "search=")) {
+-            gtk_search_bar_set_search_mode (GTK_SEARCH_BAR (priv->search_bar), FALSE);
+-        }
+-        yelp_application_update_bookmarks (priv->application,
+-                                           doc_uri,
+-                                           page_id,
+-                                           icon,
+-                                           title);
++
++        change_selection (doc_uri, window);
++//        if (!g_str_has_prefix (page_id, "search=")) {
++//            gtk_search_bar_set_search_mode (GTK_SEARCH_BAR (priv->search_bar), FALSE);
++//        }
++//        yelp_application_update_bookmarks (priv->application,
++//                                           doc_uri,
++//                                           page_id,
++//                                           icon,
++//                                           title);
+         g_free (page_id);
+         g_free (icon);
+         g_free (title);
+@@ -1193,7 +1536,7 @@ view_root_title (YelpView    *view,
+     if (page_title)
+         gtk_header_bar_set_title (GTK_HEADER_BAR (priv->header), page_title);
+     else
+-        gtk_header_bar_set_title (GTK_HEADER_BAR (priv->header), _("Help"));
++        gtk_header_bar_set_title (GTK_HEADER_BAR (priv->header), _("HHelp"));
+ 
+     if (root_title && (page_title == NULL || strcmp (root_title, page_title)))
+         gtk_header_bar_set_subtitle (GTK_HEADER_BAR (priv->header), root_title);
+diff --git a/src/yelp-window.h b/src/yelp-window.h
+index a130306..c24a04f 100644
+--- a/src/yelp-window.h
++++ b/src/yelp-window.h
+@@ -44,6 +44,16 @@ struct _YelpWindowClass
+     GtkApplicationWindowClass  parent_class;
+ };
+ 
++typedef struct _tocItem {
++    YelpWindow *window;
++    GtkWidget  *button;
++    GtkWidget  *label;
++    GtkWidget  *row;
++    gchar      *title;
++    gchar      *id;
++    gboolean    checked;
++}TocItem;
++
+ GType             yelp_window_get_type     (void);
+ YelpWindow *      yelp_window_new          (YelpApplication *app);
+ void              yelp_window_load_uri     (YelpWindow      *window,
