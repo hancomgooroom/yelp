@@ -1,0 +1,326 @@
+From 208e87d3d6e47984ee2a0a39013392ba26f0da4c Mon Sep 17 00:00:00 2001
+From: donghun <donghun@gooroom.kr>
+Date: Tue, 23 Mar 2021 19:07:26 +0900
+Subject: [PATCH] Added Gooroom resource
+
+Change-Id: If834cd8f906574a35caaa1a03bf5c5b526bf5662
+---
+ configure.ac             |   3 +
+ libyelp/yelp-help-list.c | 148 ++++++++++++++++++++++-----------------
+ src/yelp-application.c   |  62 +++++++++++++++-
+ 3 files changed, 147 insertions(+), 66 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index a19cb85..21092c9 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -61,6 +61,9 @@ AC_SUBST(GETTEXT_PACKAGE)
+ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",
+                    [The gettext translation domain])
+ 
++AC_DEFINE_UNQUOTED(GOOROOM_PATH,"/usr/share/gooroom-yelp-adjustments/.yelp",
++                   [The Gooroom yelp resource path])
++
+ AC_ARG_VAR([ITSTOOL], [Path to the `itstool` command])
+ AC_CHECK_PROG([ITSTOOL], [itstool], [itstool])
+ if test x"$ITSTOOL" = x; then
+diff --git a/libyelp/yelp-help-list.c b/libyelp/yelp-help-list.c
+index 332de87..007ecc5 100644
+--- a/libyelp/yelp-help-list.c
++++ b/libyelp/yelp-help-list.c
+@@ -225,95 +225,113 @@ help_list_entries_init (YelpHelpList *list)
+ {
+     const gchar * const *sdatadirs = g_get_system_data_dirs ();
+     const gchar * const *langs = g_get_language_names ();
++
+     YelpHelpListPrivate *priv = GET_PRIV (list);
+     /* The strings are still owned by GLib; we just own the array. */
+     gchar **datadirs;
+     gint datadir_i, lang_i;
+ 
++    gboolean is_ko = FALSE;
++    gboolean gr_adjustments = FALSE;
++
++    gr_adjustments = g_file_test (GOOROOM_PATH, G_FILE_TEST_EXISTS);
++
++    for (lang_i = 0; langs[lang_i]; lang_i++) {
++        if (g_strcmp0 (langs[lang_i], "ko") == 0) {
++            is_ko = TRUE;
++            break;
++        }
++    }
++
+     datadirs = g_new0 (gchar *, g_strv_length ((gchar **) sdatadirs) + 2);
+     datadirs[0] = (gchar *) g_get_user_data_dir ();
+     for (datadir_i = 0; sdatadirs[datadir_i]; datadir_i++) {
+         datadirs[datadir_i + 1] = (gchar *) sdatadirs[datadir_i];
+     }
+ 
+-    for (datadir_i = 0; datadirs[datadir_i]; datadir_i++) {
+-        gchar *helpdirname = g_build_filename (datadirs[datadir_i], "gnome", "help", NULL);       
+-        GFile *helpdir = g_file_new_for_path (helpdirname);
+-        GFileEnumerator *children = g_file_enumerate_children (helpdir,
+-                                                               G_FILE_ATTRIBUTE_STANDARD_TYPE","
+-                                                               G_FILE_ATTRIBUTE_STANDARD_NAME,
+-                                                               G_FILE_QUERY_INFO_NONE,
+-                                                               NULL, NULL);
+-        GFileInfo *child;
+-        if (children == NULL) {
+-            g_object_unref (helpdir);
+-            g_free (helpdirname);
+-            continue;
+-        }
+-        while ((child = g_file_enumerator_next_file (children, NULL, NULL))) {
+-            gchar *docid;
+-            HelpListEntry *entry = NULL;
+-
+-            if (g_file_info_get_file_type (child) != G_FILE_TYPE_DIRECTORY) {
+-                g_object_unref (child);
+-                continue;
+-            }
+-
+-            docid = g_strconcat ("ghelp:", g_file_info_get_name (child), NULL);
+-            if (g_hash_table_lookup (priv->entries, docid)) {
+-                g_free (docid);
+-                g_object_unref (child);
++    if (!is_ko || (!gr_adjustments && is_ko)) {
++        for (datadir_i = 0; datadirs[datadir_i]; datadir_i++) {
++            gchar *helpdirname = g_build_filename (datadirs[datadir_i], "gnome", "help", NULL);
++            GFile *helpdir = g_file_new_for_path (helpdirname);
++            GFileEnumerator *children = g_file_enumerate_children (helpdir,
++                                                                   G_FILE_ATTRIBUTE_STANDARD_TYPE","
++                                                                   G_FILE_ATTRIBUTE_STANDARD_NAME,
++                                                                   G_FILE_QUERY_INFO_NONE,
++                                                                   NULL, NULL);
++            GFileInfo *child;
++            if (children == NULL) {
++                g_object_unref (helpdir);
++                g_free (helpdirname);
+                 continue;
+             }
++            while ((child = g_file_enumerator_next_file (children, NULL, NULL))) {
++                gchar *docid;
++                HelpListEntry *entry = NULL;
+ 
+-            for (lang_i = 0; langs[lang_i]; lang_i++) {
+-                gchar *filename, *tmp;
++                if (g_file_info_get_file_type (child) != G_FILE_TYPE_DIRECTORY) {
++                    g_object_unref (child);
++                    continue;
++                }
+ 
+-                filename = g_build_filename (helpdirname,
+-                                            g_file_info_get_name (child),
+-                                            langs[lang_i],
+-                                            "index.page",
+-                                             NULL);
+-                if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
+-                    entry = g_new0 (HelpListEntry, 1);
+-                    entry->id = g_strdup (docid);
+-                    entry->filename = filename;
+-                    entry->type = YELP_URI_DOCUMENT_TYPE_MALLARD;
+-                    break;
++                docid = g_strconcat ("ghelp:", g_file_info_get_name (child), NULL);
++                if (g_hash_table_lookup (priv->entries, docid)) {
++                    g_free (docid);
++                    g_object_unref (child);
++                    continue;
+                 }
+-                g_free (filename);
+ 
+-                tmp = g_strdup_printf ("%s.xml", g_file_info_get_name (child));
+-                filename = g_build_filename (helpdirname,
+-                                             g_file_info_get_name (child),
+-                                             langs[lang_i],
+-                                             tmp,
+-                                             NULL);
+-                g_free (tmp);
+-                if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
+-                    entry = g_new0 (HelpListEntry, 1);
+-                    entry->id = g_strdup (docid);
+-                    entry->filename = filename;
+-                    entry->type = YELP_URI_DOCUMENT_TYPE_DOCBOOK;
+-                    break;
++                for (lang_i = 0; langs[lang_i]; lang_i++) {
++                    gchar *filename, *tmp;
++
++                    filename = g_build_filename (helpdirname,
++                                                g_file_info_get_name (child),
++                                                langs[lang_i],
++                                                "index.page",
++                                                 NULL);
++                    if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
++                        entry = g_new0 (HelpListEntry, 1);
++                        entry->id = g_strdup (docid);
++                        entry->filename = filename;
++                        entry->type = YELP_URI_DOCUMENT_TYPE_MALLARD;
++                        break;
++                    }
++                    g_free (filename);
++
++                    tmp = g_strdup_printf ("%s.xml", g_file_info_get_name (child));
++                    filename = g_build_filename (helpdirname,
++                                                 g_file_info_get_name (child),
++                                                 langs[lang_i],
++                                                 tmp,
++                                                 NULL);
++                    g_free (tmp);
++                    if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
++                        entry = g_new0 (HelpListEntry, 1);
++                        entry->id = g_strdup (docid);
++                        entry->filename = filename;
++                        entry->type = YELP_URI_DOCUMENT_TYPE_DOCBOOK;
++                        break;
++                    }
++                    g_free (filename);
+                 }
+-                g_free (filename);
+-            }
+ 
+-            if (entry != NULL) {
+-                g_hash_table_insert (priv->entries, docid, entry);
+-                priv->all_entries = g_list_prepend (priv->all_entries, entry);
++                if (entry != NULL) {
++                    g_hash_table_insert (priv->entries, docid, entry);
++                    priv->all_entries = g_list_prepend (priv->all_entries, entry);
++                }
++                else
++                    g_free (docid);
++                g_object_unref (child);
+             }
+-            else
+-                g_free (docid);
+-            g_object_unref (child);
++            g_object_unref (children);
++            g_object_unref (helpdir);
++            g_free (helpdirname);
+         }
+-        g_object_unref (children);
+-        g_object_unref (helpdir);
+-        g_free (helpdirname);
+     }
+     for (datadir_i = 0; datadirs[datadir_i]; datadir_i++) {
+         for (lang_i = 0; langs[lang_i]; lang_i++) {
++            if (gr_adjustments && is_ko &&
++                (g_strcmp0 (langs[lang_i], "ko") != 0))
++                continue;
+             gchar *langdirname = g_build_filename (datadirs[datadir_i], "help", langs[lang_i], NULL);
+             GFile *langdir = g_file_new_for_path (langdirname);
+             GFileEnumerator *children = g_file_enumerate_children (langdir,
+diff --git a/src/yelp-application.c b/src/yelp-application.c
+index 505c3ed..6d9ad8d 100644
+--- a/src/yelp-application.c
++++ b/src/yelp-application.c
+@@ -27,6 +27,7 @@
+ #include <gio/gio.h>
+ #include <gio/gsettingsbackend.h>
+ #include <glib/gi18n.h>
++#include <glib/gstdio.h>
+ #include <gtk/gtk.h>
+ #ifdef GDK_WINDOWING_X11
+ #include <gdk/gdkx.h>
+@@ -111,6 +112,8 @@ struct _YelpApplicationPrivate {
+     GHashTable         *docsettings;
+ 
+     GtkCssProvider     *provider;
++
++    GHashTable *cmd_hash;
+ };
+ 
+ G_DEFINE_TYPE_WITH_CODE (YelpApplication, yelp_application, GTK_TYPE_APPLICATION,
+@@ -119,6 +122,39 @@ G_DEFINE_TYPE_WITH_CODE (YelpApplication, yelp_application, GTK_TYPE_APPLICATION
+                                                 yelp_application_iface_init))
+ #define GET_PRIV(object)(G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_APPLICATION, YelpApplicationPrivate))
+ 
++static void
++yelp_application_gooroom_init (YelpApplication *app)
++{
++    FILE *fp;
++    gchar line[1024], *lineptr;
++    gchar **cmds = NULL;
++
++    YelpApplicationPrivate *priv = GET_PRIV (app);
++
++    priv->cmd_hash = NULL;
++
++    if (!g_file_test (GOOROOM_PATH, G_FILE_TEST_EXISTS))
++        return;
++
++    priv->cmd_hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
++
++    if ((fp = g_fopen (GOOROOM_PATH, "r")) != NULL)
++    {
++        while (fgets (line, sizeof (line), fp) != NULL)
++        {
++            int len = strlen (line);
++            line [len -1]= '\0';
++            lineptr = line;
++            cmds = g_strsplit (lineptr,",", -1);
++            g_hash_table_insert (priv->cmd_hash, g_strdup(cmds[0]), g_strdup(cmds[1]));
++        }
++        fclose (fp);
++    }
++
++    if (cmds)
++        g_strfreev (cmds);
++}
++
+ static void
+ yelp_application_init (YelpApplication *app)
+ {
+@@ -212,6 +248,11 @@ yelp_application_dispose (GObject *object)
+         priv->gsettings = NULL;
+     }
+ 
++    if (priv->cmd_hash) {
++        g_hash_table_unref (priv->cmd_hash);
++        priv->cmd_hash = NULL;
++    }
++
+     G_OBJECT_CLASS (yelp_application_parent_class)->dispose (object);
+ }
+ 
+@@ -235,12 +276,31 @@ yelp_application_cmdline (GApplication     *app,
+     GOptionContext *context;
+     gint argc = g_strv_length (*arguments);
+     gint i;
++    YelpApplication *yelp;
++    YelpApplicationPrivate *priv;
+ 
+     context = g_option_context_new (NULL);
+     g_option_context_add_group (context, gtk_get_option_group (FALSE));
+     g_option_context_add_main_entries (context, entries, GETTEXT_PACKAGE);
+     g_option_context_parse (context, &argc, arguments, NULL);
+ 
++    //gooroom init
++    yelp = YELP_APPLICATION (app);
++    priv = GET_PRIV (app);
++    yelp_application_gooroom_init (yelp);
++
++    if (priv->cmd_hash &&
++        0 < g_hash_table_size (priv->cmd_hash)) {
++        for (i = 1; i < argc; i++) {
++            gchar *gr_cmd;
++            gr_cmd = g_hash_table_lookup (priv->cmd_hash, (*arguments)[i]);
++            if (gr_cmd != NULL) {
++                (*arguments)[i] = g_strdup (gr_cmd);
++            }
++        }
++    }
++#if 0
++    // local
+     for (i = 1; i < argc; i++) {
+         if (!strchr ((*arguments)[i], ':') && !((*arguments)[i][0] == '/')) {
+             GFile *base, *new;
+@@ -257,7 +317,7 @@ yelp_application_cmdline (GApplication     *app,
+             g_object_unref (base);
+         }
+     }
+-
++#endif
+     return G_APPLICATION_CLASS (yelp_application_parent_class)
+         ->local_command_line (app, arguments, exit_status);
+ }
+-- 
+2.20.1
+

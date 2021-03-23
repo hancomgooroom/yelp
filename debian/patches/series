@@ -3,4 +3,5 @@
 disable_package_search.patch
 #gooroom-show-help-preparing-dialog.patch
 gooroom-customized-ui.patch
+gooroom-add-yelp-resource.patch
 
