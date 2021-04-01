@@ -1,3 +1,13 @@
+yelp (3.31.90-1+grm2u1+han2u1) unstable; urgency=medium
+
+  [ HaeRyong Jeong ]
+  * [68474713] Changed customized ui Build with gooroom-help-contents project.
+
+  [ donghun ]
+  * [3e042244] Added Gooroom yelp resource
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Thu, 01 Apr 2021 14:32:10 +0900
+
 yelp (3.31.90-1+grm2u1) unstable; urgency=medium
 
   [ cjheo ]
