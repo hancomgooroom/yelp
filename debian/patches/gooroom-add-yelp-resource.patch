@@ -1,14 +1,16 @@
-From 208e87d3d6e47984ee2a0a39013392ba26f0da4c Mon Sep 17 00:00:00 2001
+From 4d8b504fc9364881dbfff4fdcd892644688fa8bc Mon Sep 17 00:00:00 2001
 From: donghun <donghun@gooroom.kr>
-Date: Tue, 23 Mar 2021 19:07:26 +0900
-Subject: [PATCH] Added Gooroom resource
+Date: Thu, 8 Apr 2021 14:49:31 +0900
+Subject: [PATCH] Modified Gooroom yelp resource
 
-Change-Id: If834cd8f906574a35caaa1a03bf5c5b526bf5662
+Change-Id: I98365207f1e086970ecd21f385866641ff4c693a
 ---
  configure.ac             |   3 +
  libyelp/yelp-help-list.c | 148 ++++++++++++++++++++++-----------------
- src/yelp-application.c   |  62 +++++++++++++++-
- 3 files changed, 147 insertions(+), 66 deletions(-)
+ libyelp/yelp-view.c      |   6 +-
+ src/yelp-application.c   |  75 +++++++++++++++++++-
+ src/yelp-window.c        |   4 --
+ 5 files changed, 163 insertions(+), 73 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
 index a19cb85..21092c9 100644
@@ -207,8 +209,25 @@ index 332de87..007ecc5 100644
              gchar *langdirname = g_build_filename (datadirs[datadir_i], "help", langs[lang_i], NULL);
              GFile *langdir = g_file_new_for_path (langdirname);
              GFileEnumerator *children = g_file_enumerate_children (langdir,
+diff --git a/libyelp/yelp-view.c b/libyelp/yelp-view.c
+index d68d593..f18b043 100644
+--- a/libyelp/yelp-view.c
++++ b/libyelp/yelp-view.c
+@@ -1695,9 +1695,9 @@ view_load_status_changed (WebKitWebView   *view,
+         if (priv->page_title == NULL) {
+             GParamSpec *spec;
+             priv->page_title = g_strdup (webkit_web_view_get_title (view));
+-            spec = g_object_class_find_property ((GObjectClass *) YELP_VIEW_GET_CLASS (view),
+-                                                 "page-title");
+-            g_signal_emit_by_name (view, "notify::page-title", spec);
++            if (priv->page_title != NULL &&  0 < strlen (priv->page_title)) {
++                g_signal_emit_by_name (view, "notify::root-title", NULL);
++            }
+         }
+ 
+         g_signal_emit (view, signals[LOADED], 0);
 diff --git a/src/yelp-application.c b/src/yelp-application.c
-index 505c3ed..6d9ad8d 100644
+index 505c3ed..4eedaa3 100644
 --- a/src/yelp-application.c
 +++ b/src/yelp-application.c
 @@ -27,6 +27,7 @@
@@ -219,6 +238,15 @@ index 505c3ed..6d9ad8d 100644
  #include <gtk/gtk.h>
  #ifdef GDK_WINDOWING_X11
  #include <gdk/gdkx.h>
+@@ -40,7 +41,7 @@
+ #include "yelp-application.h"
+ #include "yelp-window.h"
+ 
+-#define DEFAULT_URI "help:gnome-help"
++#define DEFAULT_URI "help:index"
+ 
+ static gboolean editor_mode = FALSE;
+ 
 @@ -111,6 +112,8 @@ struct _YelpApplicationPrivate {
      GHashTable         *docsettings;
  
@@ -280,12 +308,14 @@ index 505c3ed..6d9ad8d 100644
      G_OBJECT_CLASS (yelp_application_parent_class)->dispose (object);
  }
  
-@@ -235,12 +276,31 @@ yelp_application_cmdline (GApplication     *app,
+@@ -235,12 +276,43 @@ yelp_application_cmdline (GApplication     *app,
      GOptionContext *context;
      gint argc = g_strv_length (*arguments);
      gint i;
 +    YelpApplication *yelp;
 +    YelpApplicationPrivate *priv;
++
++    const gchar * const *langs = g_get_language_names ();
  
      context = g_option_context_new (NULL);
      g_option_context_add_group (context, gtk_get_option_group (FALSE));
@@ -297,7 +327,17 @@ index 505c3ed..6d9ad8d 100644
 +    priv = GET_PRIV (app);
 +    yelp_application_gooroom_init (yelp);
 +
-+    if (priv->cmd_hash &&
++    gint lang_i;
++    gboolean is_ko = FALSE;
++
++    for (lang_i = 0; langs[lang_i]; lang_i++) {
++        if (g_strcmp0 (langs[lang_i], "ko") == 0) {
++            is_ko = TRUE;
++            break;
++        }
++    }
++
++    if (is_ko && priv->cmd_hash &&
 +        0 < g_hash_table_size (priv->cmd_hash)) {
 +        for (i = 1; i < argc; i++) {
 +            gchar *gr_cmd;
@@ -312,15 +352,35 @@ index 505c3ed..6d9ad8d 100644
      for (i = 1; i < argc; i++) {
          if (!strchr ((*arguments)[i], ':') && !((*arguments)[i][0] == '/')) {
              GFile *base, *new;
-@@ -257,7 +317,7 @@ yelp_application_cmdline (GApplication     *app,
-             g_object_unref (base);
+@@ -258,6 +330,7 @@ yelp_application_cmdline (GApplication     *app,
          }
      }
--
+ 
 +#endif
      return G_APPLICATION_CLASS (yelp_application_parent_class)
          ->local_command_line (app, arguments, exit_status);
  }
+diff --git a/src/yelp-window.c b/src/yelp-window.c
+index da7638d..f754050 100644
+--- a/src/yelp-window.c
++++ b/src/yelp-window.c
+@@ -1527,16 +1527,12 @@ view_root_title (YelpView    *view,
+     if (!priv->use_header) {
+         if (root_title)
+             gtk_window_set_title (GTK_WINDOW (window), root_title);
+-        else
+-            gtk_window_set_title (GTK_WINDOW (window), _("Help"));
+ 
+         goto out;
+     }
+ 
+     if (page_title)
+         gtk_header_bar_set_title (GTK_HEADER_BAR (priv->header), page_title);
+-    else
+-        gtk_header_bar_set_title (GTK_HEADER_BAR (priv->header), _("HHelp"));
+ 
+     if (root_title && (page_title == NULL || strcmp (root_title, page_title)))
+         gtk_header_bar_set_subtitle (GTK_HEADER_BAR (priv->header), root_title);
 -- 
 2.20.1
 
