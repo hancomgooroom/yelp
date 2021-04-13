@@ -1,0 +1,27 @@
+diff --git a/po/ko.po b/po/ko.po
+index 2601aae..38b4b99 100644
+--- a/po/ko.po
++++ b/po/ko.po
+@@ -362,8 +362,8 @@ msgid "Remove Bookmark"
+ msgstr "책갈피 제거"
+ 
+ #: ../yelp.desktop.in.in.h:2
+-msgid "Get help with GNOME"
+-msgstr "그놈에서 도움말을 봅니다"
++msgid "Get help with GOOROOM"
++msgstr "구름에서 도움말을 봅니다"
+ 
+ #: ../yelp.desktop.in.in.h:3
+ msgid "documentation;information;manual;help;"
+diff --git a/yelp.desktop.in b/yelp.desktop.in
+index a3d839c..294b900 100644
+--- a/yelp.desktop.in
++++ b/yelp.desktop.in
+@@ -1,6 +1,6 @@
+ [Desktop Entry]
+ Name=Help
+-Comment=Get help with GNOME
++Comment=Get help with GOOROOM
+ Keywords=documentation;information;manual;help;
+ OnlyShowIn=GNOME;Unity;
+ Exec=yelp %u
