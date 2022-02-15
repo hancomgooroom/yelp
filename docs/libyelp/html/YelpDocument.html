@@ -8,7 +8,7 @@
 <link rel="up" href="ch01s02.html" title="Document Processing">
 <link rel="prev" href="ch01s02.html" title="Document Processing">
 <link rel="next" href="YelpSimpleDocument.html" title="YelpSimpleDocument">
-<meta name="generator" content="GTK-Doc V1.28 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.33.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -37,8 +37,8 @@
 <a name="YelpDocument.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -269,6 +269,22 @@
 <span class="returnvalue">gchar</span> *
 </td>
 <td class="function_name">
+<a href="YelpDocument.html#yelp-document-get-page-keywords">yelp_document_get_page_keywords</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a href="YelpDocument.html#yelp-document-set-page-keywords">yelp_document_set_page_keywords</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> *
+</td>
+<td class="function_name">
 <a href="YelpDocument.html#yelp-document-get-page-icon">yelp_document_get_page_icon</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
@@ -320,7 +336,7 @@
 <td class="property_type">
 <span class="type">YelpUri</span> *</td>
 <td class="property_name"><a href="YelpDocument.html#YelpDocument--document-uri">document-uri</a></td>
-<td class="property_flags">Read / Write / Construct Only</td>
+<td class="property_flags">Read / Write / Construct Only</td>
 </tr>
 <tr>
 <td class="property_type"><span class="type">gboolean</span></td>
@@ -334,19 +350,13 @@
 <a name="YelpDocument.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
-<tbody>
-<tr>
+<tbody><tr>
 <td class="datatype_keyword">enum</td>
 <td class="function_name"><a href="YelpDocument.html#YelpDocumentSignal">YelpDocumentSignal</a></td>
-</tr>
-<tr>
-<td class="datatype_keyword"> </td>
-<td class="function_name"><a href="YelpDocument.html#YelpDocumentPriv">YelpDocumentPriv</a></td>
-</tr>
-</tbody>
+</tr></tbody>
 </table></div>
 </div>
 <div class="refsect1">
@@ -571,6 +581,21 @@ yelp_document_set_page_desc (<em class="parameter"><code><span class="type">Yelp
 </div>
 <hr>
 <div class="refsect2">
+<a name="yelp-document-get-page-keywords"></a><h3>yelp_document_get_page_keywords ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> *
+yelp_document_get_page_keywords (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                                 <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="yelp-document-set-page-keywords"></a><h3>yelp_document_set_page_keywords ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+yelp_document_set_page_keywords (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
+                                 <em class="parameter"><code>const <span class="type">gchar</span> *page_id</code></em>,
+                                 <em class="parameter"><code>const <span class="type">gchar</span> *keywords</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
 <a name="yelp-document-get-page-icon"></a><h3>yelp_document_get_page_icon ()</h3>
 <pre class="programlisting"><span class="returnvalue">gchar</span> *
 yelp_document_get_page_icon (<em class="parameter"><code><span class="type">YelpDocument</span> *document</code></em>,
@@ -640,11 +665,6 @@ yelp_document_error_pending (<em class="parameter"><code><span class="type">Yelp
 </table></div>
 </div>
 </div>
-<hr>
-<div class="refsect2">
-<a name="YelpDocumentPriv"></a><h3>YelpDocumentPriv</h3>
-<pre class="programlisting">typedef struct _YelpDocumentPriv YelpDocumentPriv;</pre>
-</div>
 </div>
 <div class="refsect1">
 <a name="YelpDocument.property-details"></a><h2>Property Details</h2>
@@ -652,19 +672,21 @@ yelp_document_error_pending (<em class="parameter"><code><span class="type">Yelp
 <a name="YelpDocument--document-uri"></a><h3>The <code class="literal">“document-uri”</code> property</h3>
 <pre class="programlisting">  “document-uri”             <span class="type">YelpUri</span> *</pre>
 <p>The URI which identifies the document.</p>
-<p>Flags: Read / Write / Construct Only</p>
+<p>Owner: YelpDocument</p>
+<p>Flags: Read / Write / Construct Only</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="YelpDocument--indexed"></a><h3>The <code class="literal">“indexed”</code> property</h3>
 <pre class="programlisting">  “indexed”                  <span class="type">gboolean</span></pre>
 <p>Whether the document content has been indexed.</p>
+<p>Owner: YelpDocument</p>
 <p>Flags: Read / Write / Construct</p>
 <p>Default value: FALSE</p>
 </div>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.28</div>
+<hr>Generated by GTK-Doc V1.33.1</div>
 </body>
 </html>

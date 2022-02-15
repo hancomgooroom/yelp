@@ -66,17 +66,17 @@
     <keyword type="function" name="yelp_document_set_page_title ()" link="YelpDocument.html#yelp-document-set-page-title"/>
     <keyword type="function" name="yelp_document_get_page_desc ()" link="YelpDocument.html#yelp-document-get-page-desc"/>
     <keyword type="function" name="yelp_document_set_page_desc ()" link="YelpDocument.html#yelp-document-set-page-desc"/>
+    <keyword type="function" name="yelp_document_get_page_keywords ()" link="YelpDocument.html#yelp-document-get-page-keywords"/>
+    <keyword type="function" name="yelp_document_set_page_keywords ()" link="YelpDocument.html#yelp-document-set-page-keywords"/>
     <keyword type="function" name="yelp_document_get_page_icon ()" link="YelpDocument.html#yelp-document-get-page-icon"/>
     <keyword type="function" name="yelp_document_set_page_icon ()" link="YelpDocument.html#yelp-document-set-page-icon"/>
     <keyword type="function" name="yelp_document_has_page ()" link="YelpDocument.html#yelp-document-has-page"/>
     <keyword type="function" name="yelp_document_signal ()" link="YelpDocument.html#yelp-document-signal"/>
     <keyword type="function" name="yelp_document_error_pending ()" link="YelpDocument.html#yelp-document-error-pending"/>
     <keyword type="enum" name="enum YelpDocumentSignal" link="YelpDocument.html#YelpDocumentSignal"/>
-    <keyword type="struct" name="YelpDocumentPriv" link="YelpDocument.html#YelpDocumentPriv"/>
     <keyword type="property" name="The “document-uri” property" link="YelpDocument.html#YelpDocument--document-uri"/>
     <keyword type="property" name="The “indexed” property" link="YelpDocument.html#YelpDocument--indexed"/>
     <keyword type="function" name="yelp_simple_document_new ()" link="YelpSimpleDocument.html#yelp-simple-document-new"/>
-    <keyword type="struct" name="YelpSimpleDocumentPriv" link="YelpSimpleDocument.html#YelpSimpleDocumentPriv"/>
     <keyword type="function" name="yelp_uri_new ()" link="YelpUri.html#yelp-uri-new"/>
     <keyword type="function" name="yelp_uri_new_relative ()" link="YelpUri.html#yelp-uri-new-relative"/>
     <keyword type="function" name="yelp_uri_new_search ()" link="YelpUri.html#yelp-uri-new-search"/>
@@ -119,7 +119,6 @@
     <keyword type="enum" name="enum YelpSettingsColor" link="YelpSettings.html#YelpSettingsColor"/>
     <keyword type="enum" name="enum YelpSettingsFont" link="YelpSettings.html#YelpSettingsFont"/>
     <keyword type="enum" name="enum YelpSettingsIcon" link="YelpSettings.html#YelpSettingsIcon"/>
-    <keyword type="struct" name="YelpSettingsPriv" link="YelpSettings.html#YelpSettingsPriv"/>
     <keyword type="property" name="The “editor-mode” property" link="YelpSettings.html#YelpSettings--editor-mode"/>
     <keyword type="property" name="The “font-adjustment” property" link="YelpSettings.html#YelpSettings--font-adjustment"/>
     <keyword type="property" name="The “gtk-icon-theme” property" link="YelpSettings.html#YelpSettings--gtk-icon-theme"/>

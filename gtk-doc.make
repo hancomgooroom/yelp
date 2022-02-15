@@ -57,6 +57,7 @@ DOC_STAMPS=setup-build.stamp scan-build.stamp sgml-build.stamp \
 	sgml.stamp html.stamp pdf.stamp
 
 SCANOBJ_FILES = 		 \
+	$(DOC_MODULE).actions	 \
 	$(DOC_MODULE).args 	 \
 	$(DOC_MODULE).hierarchy  \
 	$(DOC_MODULE).interfaces \
@@ -212,6 +213,7 @@ html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files) $(expand_con
 	for file in $(HTML_IMAGES) ; do \
 	  test -f $(abs_srcdir)/$$file && cp $(abs_srcdir)/$$file $(abs_builddir)/html; \
 	  test -f $(abs_builddir)/$$file && cp $(abs_builddir)/$$file $(abs_builddir)/html; \
+	  test -f $$file && cp $$file $(abs_builddir)/html; \
 	done;
 	$(GTK_DOC_V_XREF)gtkdoc-fixxref --module=$(DOC_MODULE) --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS)
 	$(AM_V_at)touch html-build.stamp

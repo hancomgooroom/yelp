@@ -8,7 +8,7 @@
 <link rel="up" href="ch01.html#id-1.2.2" title="Widgets">
 <link rel="prev" href="ch01.html" title="API Reference">
 <link rel="next" href="ch01s02.html" title="Document Processing">
-<meta name="generator" content="GTK-Doc V1.28 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.33.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -38,8 +38,8 @@
 <a name="YelpView.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -136,31 +136,31 @@
 <tbody>
 <tr>
 <td class="property_type">
-<span class="type">gchar</span> *</td>
+<span class="type">char</span> *</td>
 <td class="property_name"><a href="YelpView.html#YelpView--page-desc">page-desc</a></td>
 <td class="property_flags">Read</td>
 </tr>
 <tr>
 <td class="property_type">
-<span class="type">gchar</span> *</td>
+<span class="type">char</span> *</td>
 <td class="property_name"><a href="YelpView.html#YelpView--page-icon">page-icon</a></td>
 <td class="property_flags">Read</td>
 </tr>
 <tr>
 <td class="property_type">
-<span class="type">gchar</span> *</td>
+<span class="type">char</span> *</td>
 <td class="property_name"><a href="YelpView.html#YelpView--page-id">page-id</a></td>
 <td class="property_flags">Read</td>
 </tr>
 <tr>
 <td class="property_type">
-<span class="type">gchar</span> *</td>
+<span class="type">char</span> *</td>
 <td class="property_name"><a href="YelpView.html#YelpView--page-title">page-title</a></td>
 <td class="property_flags">Read</td>
 </tr>
 <tr>
 <td class="property_type">
-<span class="type">gchar</span> *</td>
+<span class="type">char</span> *</td>
 <td class="property_name"><a href="YelpView.html#YelpView--root-title">root-title</a></td>
 <td class="property_flags">Read</td>
 </tr>
@@ -182,9 +182,9 @@
 <a name="YelpView.signals"></a><h2>Signals</h2>
 <div class="informaltable"><table class="informaltable" border="0">
 <colgroup>
-<col width="150px" class="signals_return">
-<col width="300px" class="signals_name">
-<col width="200px" class="signals_flags">
+<col width="150px" class="signal_proto_type">
+<col width="300px" class="signal_proto_name">
+<col width="200px" class="signal_proto_flags">
 </colgroup>
 <tbody>
 <tr>
@@ -209,8 +209,8 @@
 <a name="YelpView.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody><tr>
 <td class="datatype_keyword">enum</td>
@@ -347,40 +347,45 @@ yelp_view_get_active_link_text (<em class="parameter"><code><span class="type">Y
 <a name="YelpView.property-details"></a><h2>Property Details</h2>
 <div class="refsect2">
 <a name="YelpView--page-desc"></a><h3>The <code class="literal">“page-desc”</code> property</h3>
-<pre class="programlisting">  “page-desc”                <span class="type">gchar</span> *</pre>
+<pre class="programlisting">  “page-desc”                <span class="type">char</span> *</pre>
 <p>The description of the page being viewed.</p>
+<p>Owner: YelpView</p>
 <p>Flags: Read</p>
 <p>Default value: NULL</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="YelpView--page-icon"></a><h3>The <code class="literal">“page-icon”</code> property</h3>
-<pre class="programlisting">  “page-icon”                <span class="type">gchar</span> *</pre>
+<pre class="programlisting">  “page-icon”                <span class="type">char</span> *</pre>
 <p>The icon of the page being viewed.</p>
+<p>Owner: YelpView</p>
 <p>Flags: Read</p>
 <p>Default value: NULL</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="YelpView--page-id"></a><h3>The <code class="literal">“page-id”</code> property</h3>
-<pre class="programlisting">  “page-id”                  <span class="type">gchar</span> *</pre>
+<pre class="programlisting">  “page-id”                  <span class="type">char</span> *</pre>
 <p>The ID of the root page of the page being viewed.</p>
+<p>Owner: YelpView</p>
 <p>Flags: Read</p>
 <p>Default value: NULL</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="YelpView--page-title"></a><h3>The <code class="literal">“page-title”</code> property</h3>
-<pre class="programlisting">  “page-title”               <span class="type">gchar</span> *</pre>
+<pre class="programlisting">  “page-title”               <span class="type">char</span> *</pre>
 <p>The title of the page being viewed.</p>
+<p>Owner: YelpView</p>
 <p>Flags: Read</p>
 <p>Default value: NULL</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="YelpView--root-title"></a><h3>The <code class="literal">“root-title”</code> property</h3>
-<pre class="programlisting">  “root-title”               <span class="type">gchar</span> *</pre>
+<pre class="programlisting">  “root-title”               <span class="type">char</span> *</pre>
 <p>The title of the root page of the page being viewed.</p>
+<p>Owner: YelpView</p>
 <p>Flags: Read</p>
 <p>Default value: NULL</p>
 </div>
@@ -389,6 +394,7 @@ yelp_view_get_active_link_text (<em class="parameter"><code><span class="type">Y
 <a name="YelpView--state"></a><h3>The <code class="literal">“state”</code> property</h3>
 <pre class="programlisting">  “state”                    <a href="YelpView.html#YelpViewState"><span class="type">YelpViewState</span></a></pre>
 <p>The loading state of the view.</p>
+<p>Owner: YelpView</p>
 <p>Flags: Read / Write</p>
 <p>Default value: YELP_VIEW_STATE_BLANK</p>
 </div>
@@ -397,6 +403,7 @@ yelp_view_get_active_link_text (<em class="parameter"><code><span class="type">Y
 <a name="YelpView--yelp-uri"></a><h3>The <code class="literal">“yelp-uri”</code> property</h3>
 <pre class="programlisting">  “yelp-uri”                 <span class="type">YelpUri</span> *</pre>
 <p>A YelpUri with the current location.</p>
+<p>Owner: YelpView</p>
 <p>Flags: Read / Write</p>
 </div>
 </div>
@@ -430,6 +437,6 @@ user_function (<span class="type">YelpView</span> *yelpview,
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.28</div>
+<hr>Generated by GTK-Doc V1.33.1</div>
 </body>
 </html>

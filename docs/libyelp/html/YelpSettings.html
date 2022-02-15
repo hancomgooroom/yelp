@@ -8,7 +8,7 @@
 <link rel="up" href="ch01.html" title="API Reference">
 <link rel="prev" href="YelpUri.html" title="YelpUri">
 <link rel="next" href="libyelp-yelp-error.html" title="yelp-error">
-<meta name="generator" content="GTK-Doc V1.28 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.33.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -38,8 +38,8 @@
 <a name="YelpSettings.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -234,7 +234,7 @@
 <td class="property_flags">Read / Write</td>
 </tr>
 <tr>
-<td class="property_type"><span class="type">gint</span></td>
+<td class="property_type"><span class="type">int</span></td>
 <td class="property_name"><a href="YelpSettings.html#YelpSettings--font-adjustment">font-adjustment</a></td>
 <td class="property_flags">Read / Write</td>
 </tr>
@@ -262,9 +262,9 @@
 <a name="YelpSettings.signals"></a><h2>Signals</h2>
 <div class="informaltable"><table class="informaltable" border="0">
 <colgroup>
-<col width="150px" class="signals_return">
-<col width="300px" class="signals_name">
-<col width="200px" class="signals_flags">
+<col width="150px" class="signal_proto_type">
+<col width="300px" class="signal_proto_name">
+<col width="200px" class="signal_proto_flags">
 </colgroup>
 <tbody>
 <tr>
@@ -289,8 +289,8 @@
 <a name="YelpSettings.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -304,10 +304,6 @@
 <tr>
 <td class="datatype_keyword">enum</td>
 <td class="function_name"><a href="YelpSettings.html#YelpSettingsIcon">YelpSettingsIcon</a></td>
-</tr>
-<tr>
-<td class="datatype_keyword"> </td>
-<td class="function_name"><a href="YelpSettings.html#YelpSettingsPriv">YelpSettingsPriv</a></td>
 </tr>
 </tbody>
 </table></div>
@@ -642,11 +638,6 @@ yelp_settings_cmp_icons (<em class="parameter"><code>const <span class="type">gc
 </table></div>
 </div>
 </div>
-<hr>
-<div class="refsect2">
-<a name="YelpSettingsPriv"></a><h3>YelpSettingsPriv</h3>
-<pre class="programlisting">typedef struct _YelpSettingsPriv YelpSettingsPriv;</pre>
-</div>
 </div>
 <div class="refsect1">
 <a name="YelpSettings.property-details"></a><h2>Property Details</h2>
@@ -654,14 +645,16 @@ yelp_settings_cmp_icons (<em class="parameter"><code>const <span class="type">gc
 <a name="YelpSettings--editor-mode"></a><h3>The <code class="literal">“editor-mode”</code> property</h3>
 <pre class="programlisting">  “editor-mode”              <span class="type">gboolean</span></pre>
 <p>Enable features useful to editors.</p>
+<p>Owner: YelpSettings</p>
 <p>Flags: Read / Write</p>
 <p>Default value: FALSE</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="YelpSettings--font-adjustment"></a><h3>The <code class="literal">“font-adjustment”</code> property</h3>
-<pre class="programlisting">  “font-adjustment”          <span class="type">gint</span></pre>
+<pre class="programlisting">  “font-adjustment”          <span class="type">int</span></pre>
 <p>A size adjustment to add to font sizes.</p>
+<p>Owner: YelpSettings</p>
 <p>Flags: Read / Write</p>
 <p>Allowed values: [-3,10]</p>
 <p>Default value: 0</p>
@@ -671,6 +664,7 @@ yelp_settings_cmp_icons (<em class="parameter"><code>const <span class="type">gc
 <a name="YelpSettings--gtk-icon-theme"></a><h3>The <code class="literal">“gtk-icon-theme”</code> property</h3>
 <pre class="programlisting">  “gtk-icon-theme”           <span class="type">GtkIconTheme</span> *</pre>
 <p>A GtkIconTheme object to get icons from.</p>
+<p>Owner: YelpSettings</p>
 <p>Flags: Read / Write</p>
 </div>
 <hr>
@@ -678,6 +672,7 @@ yelp_settings_cmp_icons (<em class="parameter"><code>const <span class="type">gc
 <a name="YelpSettings--gtk-settings"></a><h3>The <code class="literal">“gtk-settings”</code> property</h3>
 <pre class="programlisting">  “gtk-settings”             <span class="type">GtkSettings</span> *</pre>
 <p>A GtkSettings object to get settings from.</p>
+<p>Owner: YelpSettings</p>
 <p>Flags: Read / Write</p>
 </div>
 <hr>
@@ -685,6 +680,7 @@ yelp_settings_cmp_icons (<em class="parameter"><code>const <span class="type">gc
 <a name="YelpSettings--show-text-cursor"></a><h3>The <code class="literal">“show-text-cursor”</code> property</h3>
 <pre class="programlisting">  “show-text-cursor”         <span class="type">gboolean</span></pre>
 <p>Show the text cursor or caret for accessible navigation.</p>
+<p>Owner: YelpSettings</p>
 <p>Flags: Read / Write</p>
 <p>Default value: FALSE</p>
 </div>
@@ -717,6 +713,6 @@ user_function (<span class="type">YelpSettings</span> *yelpsettings,
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.28</div>
+<hr>Generated by GTK-Doc V1.33.1</div>
 </body>
 </html>
