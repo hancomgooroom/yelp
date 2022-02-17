@@ -3,6 +3,8 @@ libyelp.so.0 libyelp0 #MINVER#
  build_network_scheme@Base 3.20.1
  build_network_uri@Base 3.20.1
  build_yelp_uri@Base 3.20.1
+ help_list_entries_init@Base 3.31.90-1+grm2u1
+ help_list_get_all_entries@Base 3.31.90-1+grm2u1
  yelp_bookmarks_add_bookmark@Base 2.91.92
  yelp_bookmarks_get_type@Base 2.91.92
  yelp_bookmarks_is_bookmarked@Base 2.91.92

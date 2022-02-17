@@ -1,0 +1,4257 @@
+diff --git a/configure.ac b/configure.ac
+index 1bb4d85..21092c9 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1,5 +1,5 @@
+ AC_PREREQ([2.63])
+-AC_INIT([Yelp],[3.38.3],[http://bugzilla.gnome.org/enter_bug.cgi?product=yelp],[yelp])
++AC_INIT([Yelp],[3.31.90],[http://bugzilla.gnome.org/enter_bug.cgi?product=yelp],[yelp])
+ 
+ AC_CONFIG_AUX_DIR([build-aux])
+ AC_CONFIG_SRCDIR([src/yelp.c])
+@@ -61,6 +61,9 @@ AC_SUBST(GETTEXT_PACKAGE)
+ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",
+                    [The gettext translation domain])
+ 
++AC_DEFINE_UNQUOTED(GOOROOM_PATH,"/usr/share/gooroom-yelp-adjustments/.yelp",
++                   [The Gooroom yelp resource path])
++
+ AC_ARG_VAR([ITSTOOL], [Path to the `itstool` command])
+ AC_CHECK_PROG([ITSTOOL], [itstool], [itstool])
+ if test x"$ITSTOOL" = x; then
+diff --git a/libyelp/yelp-docbook-document.c b/libyelp/yelp-docbook-document.c
+index f4ff88a..62f4061 100644
+--- a/libyelp/yelp-docbook-document.c
++++ b/libyelp/yelp-docbook-document.c
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2003-2020 Shaun McCance  <shaunm@gnome.org>
++ * Copyright (C) 2003-2009 Shaun McCance  <shaunm@gnome.org>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -94,6 +94,9 @@ static void           transform_error           (YelpTransform        *transform
+ static void           transform_finalized       (YelpDocbookDocument  *docbook,
+                                                  gpointer              transform);
+ 
++G_DEFINE_TYPE (YelpDocbookDocument, yelp_docbook_document, YELP_TYPE_DOCUMENT)
++#define GET_PRIV(object) (G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_DOCBOOK_DOCUMENT, YelpDocbookDocumentPrivate))
++
+ typedef struct _YelpDocbookDocumentPrivate  YelpDocbookDocumentPrivate;
+ struct _YelpDocbookDocumentPrivate {
+     DocbookState   state;
+@@ -126,8 +129,6 @@ struct _YelpDocbookDocumentPrivate {
+     GHashTable   *autoids;
+ };
+ 
+-G_DEFINE_TYPE_WITH_PRIVATE (YelpDocbookDocument, yelp_docbook_document, YELP_TYPE_DOCUMENT)
+-
+ /******************************************************************************/
+ 
+ static void
+@@ -154,12 +155,14 @@ yelp_docbook_document_class_init (YelpDocbookDocumentClass *klass)
+ 
+     document_class->index = docbook_index;
+     document_class->request_page = docbook_request_page;
++
++    g_type_class_add_private (klass, sizeof (YelpDocbookDocumentPrivate));
+ }
+ 
+ static void
+ yelp_docbook_document_init (YelpDocbookDocument *docbook)
+ {
+-    YelpDocbookDocumentPrivate *priv = yelp_docbook_document_get_instance_private (docbook);
++    YelpDocbookDocumentPrivate *priv = GET_PRIV (docbook);
+ 
+     priv->state = DOCBOOK_STATE_BLANK;
+     priv->autoids = NULL;
+@@ -171,8 +174,7 @@ static void
+ yelp_docbook_document_dispose (GObject *object)
+ {
+     gint i;
+-    YelpDocbookDocumentPrivate *priv =
+-        yelp_docbook_document_get_instance_private (YELP_DOCBOOK_DOCUMENT (object));
++    YelpDocbookDocumentPrivate *priv = GET_PRIV (object);
+ 
+     if (priv->monitors != NULL) {
+         for (i = 0; priv->monitors[i]; i++) {
+@@ -188,8 +190,7 @@ yelp_docbook_document_dispose (GObject *object)
+ static void
+ yelp_docbook_document_finalize (GObject *object)
+ {
+-    YelpDocbookDocumentPrivate *priv =
+-        yelp_docbook_document_get_instance_private (YELP_DOCBOOK_DOCUMENT (object));
++    YelpDocbookDocumentPrivate *priv = GET_PRIV (object);
+ 
+     if (priv->xmldoc)
+         xmlFreeDoc (priv->xmldoc);
+@@ -220,7 +221,7 @@ yelp_docbook_document_new (YelpUri *uri)
+     docbook = (YelpDocbookDocument *) g_object_new (YELP_TYPE_DOCBOOK_DOCUMENT,
+                                                     "document-uri", uri,
+                                                     NULL);
+-    priv = yelp_docbook_document_get_instance_private (docbook);
++    priv = GET_PRIV (docbook);
+ 
+     path = yelp_uri_get_search_path (uri);
+     priv->monitors = g_new0 (GFileMonitor*, g_strv_length (path) + 1);
+@@ -249,8 +250,7 @@ docbook_request_page (YelpDocument         *document,
+                       gpointer              user_data,
+                       GDestroyNotify        notify)
+ {
+-    YelpDocbookDocumentPrivate *priv =
+-        yelp_docbook_document_get_instance_private (YELP_DOCBOOK_DOCUMENT (document));
++    YelpDocbookDocumentPrivate *priv = GET_PRIV (document);
+     gchar *docuri;
+     GError *error;
+     gboolean handled;
+@@ -311,7 +311,7 @@ docbook_request_page (YelpDocument         *document,
+ static void
+ docbook_process (YelpDocbookDocument *docbook)
+ {
+-    YelpDocbookDocumentPrivate *priv = yelp_docbook_document_get_instance_private (docbook);
++    YelpDocbookDocumentPrivate *priv = GET_PRIV (docbook);
+     YelpDocument *document = YELP_DOCUMENT (docbook);
+     GFile *file = NULL;
+     gchar *filepath = NULL;
+@@ -469,7 +469,7 @@ docbook_process (YelpDocbookDocument *docbook)
+ static void
+ docbook_disconnect (YelpDocbookDocument *docbook)
+ {
+-    YelpDocbookDocumentPrivate *priv = yelp_docbook_document_get_instance_private (docbook);
++    YelpDocbookDocumentPrivate *priv = GET_PRIV (docbook);
+     if (priv->chunk_ready) {
+         g_signal_handler_disconnect (priv->transform, priv->chunk_ready);
+         priv->chunk_ready = 0;
+@@ -491,7 +491,7 @@ docbook_disconnect (YelpDocbookDocument *docbook)
+ static gboolean
+ docbook_reload (YelpDocbookDocument *docbook)
+ {
+-    YelpDocbookDocumentPrivate *priv = yelp_docbook_document_get_instance_private (docbook);
++    YelpDocbookDocumentPrivate *priv = GET_PRIV (docbook);
+ 
+     if (priv->index_running || priv->process_running || priv->transform_running)
+         return TRUE;
+@@ -521,7 +521,7 @@ docbook_monitor_changed   (GFileMonitor         *monitor,
+                            GFileMonitorEvent     event_type,
+                            YelpDocbookDocument  *docbook)
+ {
+-    YelpDocbookDocumentPrivate *priv = yelp_docbook_document_get_instance_private (docbook);
++    YelpDocbookDocumentPrivate *priv = GET_PRIV (docbook);
+ 
+     if (g_get_monotonic_time() - priv->reload_time < 1000)
+         return;
+@@ -546,7 +546,7 @@ docbook_walk (YelpDocbookDocument *docbook)
+     xmlChar     *keywords = NULL;
+     xmlNodePtr   cur, old_cur;
+     gboolean chunkQ;
+-    YelpDocbookDocumentPrivate *priv = yelp_docbook_document_get_instance_private (docbook);
++    YelpDocbookDocumentPrivate *priv = GET_PRIV (docbook);
+     YelpDocument *document = YELP_DOCUMENT (docbook);
+ 
+     debug_print (DB_FUNCTION, "entering\n");
+@@ -853,7 +853,7 @@ transform_chunk_ready (YelpTransform       *transform,
+                        gchar               *chunk_id,
+                        YelpDocbookDocument *docbook)
+ {
+-    YelpDocbookDocumentPrivate *priv = yelp_docbook_document_get_instance_private (docbook);
++    YelpDocbookDocumentPrivate *priv = GET_PRIV (docbook);
+     gchar *content;
+ 
+     debug_print (DB_FUNCTION, "entering\n");
+@@ -880,7 +880,7 @@ static void
+ transform_finished (YelpTransform       *transform,
+                     YelpDocbookDocument *docbook)
+ {
+-    YelpDocbookDocumentPrivate *priv = yelp_docbook_document_get_instance_private (docbook);
++    YelpDocbookDocumentPrivate *priv = GET_PRIV (docbook);
+     YelpDocument *document = YELP_DOCUMENT (docbook);
+     gchar *docuri;
+     GError *error;
+@@ -916,7 +916,7 @@ static void
+ transform_error (YelpTransform       *transform,
+                  YelpDocbookDocument *docbook)
+ {
+-    YelpDocbookDocumentPrivate *priv = yelp_docbook_document_get_instance_private (docbook);
++    YelpDocbookDocumentPrivate *priv = GET_PRIV (docbook);
+     GError *error;
+ 
+     debug_print (DB_FUNCTION, "entering\n");
+@@ -938,7 +938,7 @@ static void
+ transform_finalized (YelpDocbookDocument *docbook,
+                      gpointer             transform)
+ {
+-    YelpDocbookDocumentPrivate *priv = yelp_docbook_document_get_instance_private (docbook);
++    YelpDocbookDocumentPrivate *priv = GET_PRIV (docbook);
+ 
+     debug_print (DB_FUNCTION, "entering\n");
+ 
+@@ -1007,7 +1007,7 @@ docbook_index_chunk (DocbookIndexData *index)
+     gchar *title = NULL;
+     gchar *keywords;
+     GSList *chunks = NULL;
+-    YelpDocbookDocumentPrivate *priv = yelp_docbook_document_get_instance_private (index->docbook);
++    YelpDocbookDocumentPrivate *priv = GET_PRIV (index->docbook);
+ 
+     id = xmlGetProp (index->cur, BAD_CAST "id");
+     if (!id)
+@@ -1092,7 +1092,7 @@ docbook_index_threaded (YelpDocbookDocument *docbook)
+     GFile *file = NULL;
+     gchar *filename = NULL;
+     YelpUri *uri;
+-    YelpDocbookDocumentPrivate *priv = yelp_docbook_document_get_instance_private (docbook);
++    YelpDocbookDocumentPrivate *priv = GET_PRIV (docbook);
+ 
+     uri = yelp_document_get_uri (YELP_DOCUMENT (docbook));
+     file = yelp_uri_get_file (uri);
+@@ -1153,7 +1153,7 @@ docbook_index (YelpDocument *document)
+     if (done)
+         return;
+ 
+-    priv = yelp_docbook_document_get_instance_private (YELP_DOCBOOK_DOCUMENT (document));
++    priv = GET_PRIV (document);
+     g_object_ref (document);
+     priv->index = g_thread_new ("docbook-index",
+                                 (GThreadFunc)(GCallback) docbook_index_threaded,
+diff --git a/libyelp/yelp-document.c b/libyelp/yelp-document.c
+index 0a86f3f..80d7313 100644
+--- a/libyelp/yelp-document.c
++++ b/libyelp/yelp-document.c
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2003-2020 Shaun McCance  <shaunm@gnome.org>
++ * Copyright (C) 2003-2009 Shaun McCance  <shaunm@gnome.org>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -64,7 +64,7 @@ struct _Hash {
+     GDestroyNotify  destroy;
+ };
+ 
+-struct _YelpDocumentPrivate {
++struct _YelpDocumentPriv {
+     GMutex  mutex;
+ 
+     GSList *reqs_all;         /* Holds canonical refs, only free from here */
+@@ -97,7 +97,9 @@ struct _YelpDocumentPrivate {
+     GError *idle_error;
+ };
+ 
+-G_DEFINE_TYPE_WITH_PRIVATE (YelpDocument, yelp_document, G_TYPE_OBJECT)
++G_DEFINE_TYPE (YelpDocument, yelp_document, G_TYPE_OBJECT)
++
++#define GET_PRIV(object) (G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_DOCUMENT, YelpDocumentPriv))
+ 
+ static void           yelp_document_dispose     (GObject              *object);
+ static void           yelp_document_finalize    (GObject              *object);
+@@ -290,14 +292,16 @@ yelp_document_class_init (YelpDocumentClass *klass)
+                                                           YELP_TYPE_URI,
+                                                           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE |
+                                                           G_PARAM_STATIC_STRINGS));
++
++    g_type_class_add_private (klass, sizeof (YelpDocumentPriv));
+ }
+ 
+ static void
+ yelp_document_init (YelpDocument *document)
+ {
+-    YelpDocumentPrivate *priv;
++    YelpDocumentPriv *priv;
+ 
+-    document->priv = priv = yelp_document_get_instance_private (document);
++    document->priv = priv = GET_PRIV (document);
+ 
+     g_mutex_init (&priv->mutex);
+ 
+@@ -1000,7 +1004,7 @@ document_read_contents (YelpDocument *document,
+         colors = yelp_settings_get_colors (yelp_settings_get_default ());
+         g_string_append_printf (ret,
+                                 "html { height: 100%%; } "
+-                                "body { margin: 0; padding: 0;"
++                                "body { margin-left:15px;margin-right:30px;margin-top:20px;margin-bottom:20px; padding: 0;"
+                                 " background-color: %s; color: %s;"
+                                 " direction: %s; } "
+                                 "div.header { margin-bottom: 1em; } "
+@@ -1259,7 +1263,7 @@ yelp_document_signal (YelpDocument       *document,
+ static gboolean
+ yelp_document_error_pending_idle (YelpDocument *document)
+ {
+-    YelpDocumentPrivate *priv = yelp_document_get_instance_private (document);
++    YelpDocumentPriv *priv = GET_PRIV (document);
+     GSList *cur;
+     Request *request;
+ 
+@@ -1287,7 +1291,7 @@ void
+ yelp_document_error_pending (YelpDocument *document,
+ 			     const GError *error)
+ {
+-    YelpDocumentPrivate *priv = yelp_document_get_instance_private (document);
++    YelpDocumentPriv *priv = GET_PRIV (document);
+ 
+     g_assert (document != NULL && YELP_IS_DOCUMENT (document));
+ 
+@@ -1429,7 +1433,7 @@ static gboolean
+ request_idle_contents (Request *request)
+ {
+     YelpDocument *document;
+-    YelpDocumentPrivate *priv;
++    YelpDocumentPriv *priv;
+     YelpDocumentCallback callback = NULL;
+     gpointer user_data;
+ 
+@@ -1441,7 +1445,7 @@ request_idle_contents (Request *request)
+     }
+ 
+     document = g_object_ref (request->document);
+-    priv = yelp_document_get_instance_private (document);
++    priv = GET_PRIV (document);
+ 
+     g_mutex_lock (&document->priv->mutex);
+ 
+@@ -1495,7 +1499,7 @@ static gboolean
+ request_idle_error (Request *request)
+ {
+     YelpDocument *document;
+-    YelpDocumentPrivate *priv;
++    YelpDocumentPriv *priv;
+     YelpDocumentCallback callback = NULL;
+     GError *error = NULL;
+     gpointer user_data;
+@@ -1508,7 +1512,7 @@ request_idle_error (Request *request)
+     }
+ 
+     document = g_object_ref (request->document);
+-    priv = yelp_document_get_instance_private (document);
++    priv = GET_PRIV (document);
+ 
+     g_mutex_lock (&priv->mutex);
+ 
+diff --git a/libyelp/yelp-document.h b/libyelp/yelp-document.h
+index d4db68c..8ee9203 100644
+--- a/libyelp/yelp-document.h
++++ b/libyelp/yelp-document.h
+@@ -35,9 +35,9 @@ G_BEGIN_DECLS
+ #define YELP_IS_DOCUMENT_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), YELP_TYPE_DOCUMENT))
+ #define YELP_DOCUMENT_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), YELP_TYPE_DOCUMENT, YelpDocumentClass))
+ 
+-typedef struct _YelpDocument         YelpDocument;
+-typedef struct _YelpDocumentClass    YelpDocumentClass;
+-typedef struct _YelpDocumentPrivate  YelpDocumentPrivate;
++typedef struct _YelpDocument      YelpDocument;
++typedef struct _YelpDocumentClass YelpDocumentClass;
++typedef struct _YelpDocumentPriv  YelpDocumentPriv;
+ 
+ typedef enum {
+     YELP_DOCUMENT_SIGNAL_CONTENTS,
+@@ -51,8 +51,8 @@ typedef void      (*YelpDocumentCallback)      (YelpDocument         *document,
+                                                 GError               *error);
+ 
+ struct _YelpDocument {
+-    GObject              parent;
+-    YelpDocumentPrivate *priv;
++    GObject           parent;
++    YelpDocumentPriv *priv;
+ };
+ 
+ struct _YelpDocumentClass {
+diff --git a/libyelp/yelp-help-list.c b/libyelp/yelp-help-list.c
+index 7c21ab1..007ecc5 100644
+--- a/libyelp/yelp-help-list.c
++++ b/libyelp/yelp-help-list.c
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2010-2020 Shaun McCance  <shaunm@gnome.org>
++ * Copyright (C) 2010 Shaun McCance  <shaunm@gnome.org>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -30,12 +30,11 @@
+ #include <libxml/xinclude.h>
+ #include <libxml/xpath.h>
+ #include <libxml/xpathInternals.h>
++#include <libxml/HTMLparser.h>
+ 
+ #include "yelp-help-list.h"
+ #include "yelp-settings.h"
+ 
+-typedef struct _HelpListEntry HelpListEntry;
+-
+ static void           yelp_help_list_dispose         (GObject               *object);
+ static void           yelp_help_list_finalize        (GObject               *object);
+ 
+@@ -52,22 +51,14 @@ static void           help_list_process_docbook      (YelpHelpList          *lis
+                                                       HelpListEntry         *entry);
+ static void           help_list_process_mallard      (YelpHelpList          *list,
+                                                       HelpListEntry         *entry);
++static void           help_list_process_html      (YelpHelpList          *list,
++                                                      HelpListEntry         *entry);
+ 
+ static const char*const known_vendor_prefixes[] = { "gnome",
+                                                     "fedora",
+                                                     "mozilla",
+                                                     NULL };
+ 
+-struct _HelpListEntry
+-{
+-    gchar *id;
+-    gchar *title;
+-    gchar *desc;
+-    gchar *icon;
+-
+-    gchar *filename;
+-    YelpUriDocumentType type;
+-};
+ static void
+ help_list_entry_free (HelpListEntry *entry)
+ {
+@@ -85,6 +76,9 @@ help_list_entry_cmp (HelpListEntry *a, HelpListEntry *b)
+     return g_utf8_collate (as, bs);
+ }
+ 
++G_DEFINE_TYPE (YelpHelpList, yelp_help_list, YELP_TYPE_DOCUMENT)
++#define GET_PRIV(object) (G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_HELP_LIST, YelpHelpListPrivate))
++
+ typedef struct _YelpHelpListPrivate  YelpHelpListPrivate;
+ struct _YelpHelpListPrivate {
+     GMutex         mutex;
+@@ -100,10 +94,9 @@ struct _YelpHelpListPrivate {
+     xmlXPathCompExprPtr  get_docbook_title;
+     xmlXPathCompExprPtr  get_mallard_title;
+     xmlXPathCompExprPtr  get_mallard_desc;
++    xmlXPathCompExprPtr  get_html_title;
+ };
+ 
+-G_DEFINE_TYPE_WITH_PRIVATE (YelpHelpList, yelp_help_list, YELP_TYPE_DOCUMENT)
+-
+ static void
+ yelp_help_list_class_init (YelpHelpListClass *klass)
+ {
+@@ -114,12 +107,14 @@ yelp_help_list_class_init (YelpHelpListClass *klass)
+     object_class->finalize = yelp_help_list_finalize;
+ 
+     document_class->request_page = help_list_request_page;
++
++    g_type_class_add_private (klass, sizeof (YelpHelpListPrivate));
+ }
+ 
+ static void
+ yelp_help_list_init (YelpHelpList *list)
+ {
+-    YelpHelpListPrivate *priv = yelp_help_list_get_instance_private (list);
++    YelpHelpListPrivate *priv = GET_PRIV (list);
+ 
+     g_mutex_init (&priv->mutex);
+     priv->entries = g_hash_table_new_full (g_str_hash, g_str_equal,
+@@ -135,6 +130,7 @@ yelp_help_list_init (YelpHelpList *list)
+     priv->get_mallard_title = xmlXPathCompile (BAD_CAST "normalize-space((/mal:page/mal:info/mal:title[@type='text'] |"
+                                                "                 /mal:page/mal:title)[1])");
+     priv->get_mallard_desc = xmlXPathCompile (BAD_CAST "normalize-space(/mal:page/mal:info/mal:desc[1])");
++    priv->get_html_title = xmlXPathCompile (BAD_CAST "normalize-space(/html:HEAD//html:title)");
+ 
+     yelp_document_set_page_id ((YelpDocument *) list, NULL, "index");
+     yelp_document_set_page_id ((YelpDocument *) list, "index", "index");
+@@ -149,7 +145,7 @@ yelp_help_list_dispose (GObject *object)
+ static void
+ yelp_help_list_finalize (GObject *object)
+ {
+-    YelpHelpListPrivate *priv = yelp_help_list_get_instance_private (YELP_HELP_LIST (object));
++    YelpHelpListPrivate *priv = GET_PRIV (object);
+ 
+     g_hash_table_destroy (priv->entries);
+     g_mutex_clear (&priv->mutex);
+@@ -160,6 +156,8 @@ yelp_help_list_finalize (GObject *object)
+         xmlXPathFreeCompExpr (priv->get_mallard_title);
+     if (priv->get_mallard_desc)
+         xmlXPathFreeCompExpr (priv->get_mallard_desc);
++    if (priv->get_html_title)
++        xmlXPathFreeCompExpr (priv->get_html_title);
+ 
+     G_OBJECT_CLASS (yelp_help_list_parent_class)->finalize (object);
+ }
+@@ -181,7 +179,7 @@ help_list_request_page (YelpDocument          *document,
+                         GDestroyNotify         notify)
+ {
+     gboolean handled;
+-    YelpHelpListPrivate *priv = yelp_help_list_get_instance_private (YELP_HELP_LIST (document));
++    YelpHelpListPrivate *priv = GET_PRIV (document);
+ 
+     if (page_id == NULL)
+         page_id = "index";
+@@ -215,101 +213,125 @@ help_list_request_page (YelpDocument          *document,
+     return TRUE;
+ }
+ 
+-static void
+-help_list_think (YelpHelpList *list)
++GList *
++help_list_get_all_entries (YelpDocument *list)
++{
++    YelpHelpListPrivate *priv = GET_PRIV (list);
++    return priv->all_entries;
++}
++
++void
++help_list_entries_init (YelpHelpList *list)
+ {
+     const gchar * const *sdatadirs = g_get_system_data_dirs ();
+     const gchar * const *langs = g_get_language_names ();
+-    YelpHelpListPrivate *priv = yelp_help_list_get_instance_private (list);
++
++    YelpHelpListPrivate *priv = GET_PRIV (list);
+     /* The strings are still owned by GLib; we just own the array. */
+     gchar **datadirs;
+     gint datadir_i, lang_i;
+-    GList *cur;
+-    GtkIconTheme *theme;
+ 
+-    datadirs = g_new0 (gchar *, g_strv_length ((gchar **) sdatadirs) + 2);
+-    datadirs[0] = (gchar *) g_get_user_data_dir ();
+-    for (datadir_i = 0; sdatadirs[datadir_i]; datadir_i++)
+-        datadirs[datadir_i + 1] = (gchar *) sdatadirs[datadir_i];
++    gboolean is_ko = FALSE;
++    gboolean gr_adjustments = FALSE;
+ 
+-    for (datadir_i = 0; datadirs[datadir_i]; datadir_i++) {
+-        gchar *helpdirname = g_build_filename (datadirs[datadir_i], "gnome", "help", NULL);       
+-        GFile *helpdir = g_file_new_for_path (helpdirname);
+-        GFileEnumerator *children = g_file_enumerate_children (helpdir,
+-                                                               G_FILE_ATTRIBUTE_STANDARD_TYPE","
+-                                                               G_FILE_ATTRIBUTE_STANDARD_NAME,
+-                                                               G_FILE_QUERY_INFO_NONE,
+-                                                               NULL, NULL);
+-        GFileInfo *child;
+-        if (children == NULL) {
+-            g_object_unref (helpdir);
+-            g_free (helpdirname);
+-            continue;
++    gr_adjustments = g_file_test (GOOROOM_PATH, G_FILE_TEST_EXISTS);
++
++    for (lang_i = 0; langs[lang_i]; lang_i++) {
++        if (g_strcmp0 (langs[lang_i], "ko") == 0) {
++            is_ko = TRUE;
++            break;
+         }
+-        while ((child = g_file_enumerator_next_file (children, NULL, NULL))) {
+-            gchar *docid;
+-            HelpListEntry *entry = NULL;
++    }
+ 
+-            if (g_file_info_get_file_type (child) != G_FILE_TYPE_DIRECTORY) {
+-                g_object_unref (child);
+-                continue;
+-            }
++    datadirs = g_new0 (gchar *, g_strv_length ((gchar **) sdatadirs) + 2);
++    datadirs[0] = (gchar *) g_get_user_data_dir ();
++    for (datadir_i = 0; sdatadirs[datadir_i]; datadir_i++) {
++        datadirs[datadir_i + 1] = (gchar *) sdatadirs[datadir_i];
++    }
+ 
+-            docid = g_strconcat ("ghelp:", g_file_info_get_name (child), NULL);
+-            if (g_hash_table_lookup (priv->entries, docid)) {
+-                g_free (docid);
+-                g_object_unref (child);
++    if (!is_ko || (!gr_adjustments && is_ko)) {
++        for (datadir_i = 0; datadirs[datadir_i]; datadir_i++) {
++            gchar *helpdirname = g_build_filename (datadirs[datadir_i], "gnome", "help", NULL);
++            GFile *helpdir = g_file_new_for_path (helpdirname);
++            GFileEnumerator *children = g_file_enumerate_children (helpdir,
++                                                                   G_FILE_ATTRIBUTE_STANDARD_TYPE","
++                                                                   G_FILE_ATTRIBUTE_STANDARD_NAME,
++                                                                   G_FILE_QUERY_INFO_NONE,
++                                                                   NULL, NULL);
++            GFileInfo *child;
++            if (children == NULL) {
++                g_object_unref (helpdir);
++                g_free (helpdirname);
+                 continue;
+             }
++            while ((child = g_file_enumerator_next_file (children, NULL, NULL))) {
++                gchar *docid;
++                HelpListEntry *entry = NULL;
+ 
+-            for (lang_i = 0; langs[lang_i]; lang_i++) {
+-                gchar *filename, *tmp;
++                if (g_file_info_get_file_type (child) != G_FILE_TYPE_DIRECTORY) {
++                    g_object_unref (child);
++                    continue;
++                }
+ 
+-                filename = g_build_filename (helpdirname,
+-                                            g_file_info_get_name (child),
+-                                            langs[lang_i],
+-                                            "index.page",
+-                                             NULL);
+-                if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
+-                    entry = g_new0 (HelpListEntry, 1);
+-                    entry->id = g_strdup (docid);
+-                    entry->filename = filename;
+-                    entry->type = YELP_URI_DOCUMENT_TYPE_MALLARD;
+-                    break;
++                docid = g_strconcat ("ghelp:", g_file_info_get_name (child), NULL);
++                if (g_hash_table_lookup (priv->entries, docid)) {
++                    g_free (docid);
++                    g_object_unref (child);
++                    continue;
+                 }
+-                g_free (filename);
+ 
+-                tmp = g_strdup_printf ("%s.xml", g_file_info_get_name (child));
+-                filename = g_build_filename (helpdirname,
+-                                             g_file_info_get_name (child),
+-                                             langs[lang_i],
+-                                             tmp,
+-                                             NULL);
+-                g_free (tmp);
+-                if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
+-                    entry = g_new0 (HelpListEntry, 1);
+-                    entry->id = g_strdup (docid);
+-                    entry->filename = filename;
+-                    entry->type = YELP_URI_DOCUMENT_TYPE_DOCBOOK;
+-                    break;
++                for (lang_i = 0; langs[lang_i]; lang_i++) {
++                    gchar *filename, *tmp;
++
++                    filename = g_build_filename (helpdirname,
++                                                g_file_info_get_name (child),
++                                                langs[lang_i],
++                                                "index.page",
++                                                 NULL);
++                    if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
++                        entry = g_new0 (HelpListEntry, 1);
++                        entry->id = g_strdup (docid);
++                        entry->filename = filename;
++                        entry->type = YELP_URI_DOCUMENT_TYPE_MALLARD;
++                        break;
++                    }
++                    g_free (filename);
++
++                    tmp = g_strdup_printf ("%s.xml", g_file_info_get_name (child));
++                    filename = g_build_filename (helpdirname,
++                                                 g_file_info_get_name (child),
++                                                 langs[lang_i],
++                                                 tmp,
++                                                 NULL);
++                    g_free (tmp);
++                    if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
++                        entry = g_new0 (HelpListEntry, 1);
++                        entry->id = g_strdup (docid);
++                        entry->filename = filename;
++                        entry->type = YELP_URI_DOCUMENT_TYPE_DOCBOOK;
++                        break;
++                    }
++                    g_free (filename);
+                 }
+-                g_free (filename);
+-            }
+ 
+-            if (entry != NULL) {
+-                g_hash_table_insert (priv->entries, docid, entry);
+-                priv->all_entries = g_list_prepend (priv->all_entries, entry);
++                if (entry != NULL) {
++                    g_hash_table_insert (priv->entries, docid, entry);
++                    priv->all_entries = g_list_prepend (priv->all_entries, entry);
++                }
++                else
++                    g_free (docid);
++                g_object_unref (child);
+             }
+-            else
+-                g_free (docid);
+-            g_object_unref (child);
++            g_object_unref (children);
++            g_object_unref (helpdir);
++            g_free (helpdirname);
+         }
+-        g_object_unref (children);
+-        g_object_unref (helpdir);
+-        g_free (helpdirname);
+     }
+     for (datadir_i = 0; datadirs[datadir_i]; datadir_i++) {
+         for (lang_i = 0; langs[lang_i]; lang_i++) {
++            if (gr_adjustments && is_ko &&
++                (g_strcmp0 (langs[lang_i], "ko") != 0))
++                continue;
+             gchar *langdirname = g_build_filename (datadirs[datadir_i], "help", langs[lang_i], NULL);
+             GFile *langdir = g_file_new_for_path (langdirname);
+             GFileEnumerator *children = g_file_enumerate_children (langdir,
+@@ -363,6 +385,18 @@ help_list_think (YelpHelpList *list)
+                 }
+                 g_free (filename);
+ 
++                filename = g_build_filename (langdirname,
++                                             g_file_info_get_name (child),
++                                             "index.html",
++                                             NULL);
++                if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
++                    entry = g_new0 (HelpListEntry, 1);
++                    entry->id = docid;
++                    entry->filename = filename;
++                    entry->type = YELP_URI_DOCUMENT_TYPE_HTML;
++                    goto found;                   
++                }
++
+                 g_free (docid);
+             found:
+                 g_object_unref (child);
+@@ -370,12 +404,34 @@ help_list_think (YelpHelpList *list)
+                     g_hash_table_insert (priv->entries, docid, entry);
+                     priv->all_entries = g_list_prepend (priv->all_entries, entry);
+                 }
++
++                if (entry->type == YELP_URI_DOCUMENT_TYPE_MALLARD)
++                    help_list_process_mallard (list, entry);
++                else if (entry->type == YELP_URI_DOCUMENT_TYPE_DOCBOOK)
++                    help_list_process_docbook (list, entry);
++                else if (entry->type == YELP_URI_DOCUMENT_TYPE_HTML)
++                    help_list_process_html (list, entry);
++
+             }
+ 
+             g_object_unref (children);
+         }
+     }
++
++    priv->all_entries = g_list_sort (priv->all_entries,
++                                     (GCompareFunc) help_list_entry_cmp);
+     g_free (datadirs);
++}
++
++static void
++help_list_think (YelpHelpList *list)
++{
++    YelpHelpListPrivate *priv = GET_PRIV (list);
++    /* The strings are still owned by GLib; we just own the array. */
++    GList *cur;
++    GtkIconTheme *theme;
++
++    help_list_entries_init (list);
+ 
+     theme = gtk_icon_theme_get_default ();
+     for (cur = priv->all_entries; cur != NULL; cur = cur->next) {
+@@ -384,11 +440,6 @@ help_list_think (YelpHelpList *list)
+         HelpListEntry *entry = (HelpListEntry *) cur->data;
+         const gchar *entryid = strchr (entry->id, ':') + 1;
+ 
+-        if (entry->type == YELP_URI_DOCUMENT_TYPE_MALLARD)
+-            help_list_process_mallard (list, entry);
+-        else if (entry->type == YELP_URI_DOCUMENT_TYPE_DOCBOOK)
+-            help_list_process_docbook (list, entry);
+-
+         tmp = g_strconcat (entryid, ".desktop", NULL);
+         app = g_desktop_app_info_new (tmp);
+         g_free (tmp);
+@@ -442,7 +493,7 @@ help_list_handle_page (YelpHelpList *list,
+ {
+     gchar **colors, *tmp;
+     GList *cur;
+-    YelpHelpListPrivate *priv = yelp_help_list_get_instance_private (list);
++    YelpHelpListPrivate *priv = GET_PRIV (list);
+     GtkTextDirection direction = gtk_widget_get_default_direction ();
+     GString *string = g_string_new
+         ("<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><style type='text/css'>\n"
+@@ -607,7 +658,7 @@ help_list_process_docbook (YelpHelpList  *list,
+     xmlDocPtr xmldoc;
+     xmlXPathContextPtr xpath;
+     xmlXPathObjectPtr obj = NULL;
+-    YelpHelpListPrivate *priv = yelp_help_list_get_instance_private (list);
++    YelpHelpListPrivate *priv = GET_PRIV (list);
+ 
+     parserCtxt = xmlNewParserCtxt ();
+     xmldoc = xmlCtxtReadFile (parserCtxt,
+@@ -646,7 +697,7 @@ help_list_process_mallard (YelpHelpList  *list,
+     xmlDocPtr xmldoc;
+     xmlXPathContextPtr xpath;
+     xmlXPathObjectPtr obj = NULL;
+-    YelpHelpListPrivate *priv = yelp_help_list_get_instance_private (list);
++    YelpHelpListPrivate *priv = GET_PRIV (list);
+ 
+     parserCtxt = xmlNewParserCtxt ();
+     xmldoc = xmlCtxtReadFile (parserCtxt,
+@@ -684,3 +735,68 @@ help_list_process_mallard (YelpHelpList  *list,
+     if (xpath)
+         xmlXPathFreeContext (xpath);
+ }
++
++static gchar*
++help_list_get_html_title (xmlNode *root)
++{
++    xmlNode *node = NULL;
++    xmlAttr *attr = NULL;
++    gchar   *value = NULL;
++
++    for (node = root; node; node = node->next) {
++        attr = node->properties;
++
++        while (attr && attr->name && attr->children) {
++            /* find id attribute */
++            if (0 == g_strcmp0 ((gchar *)(attr->name), "id")) {
++                gchar *at = (gchar *)xmlNodeListGetString (node->doc, attr->children, 1);
++                /* if id content is title... */
++                if (0 == g_strcmp0(at, "title")) {
++                    value = (gchar*)xmlNodeGetContent (node);
++
++                    g_free (at);
++                    return value;
++                }
++                g_free (at);
++            }
++            attr = attr->next;
++        }
++
++        value = help_list_get_html_title (node->children);
++        if (value)
++            break;
++    }
++
++    return value;
++}
++
++static void
++help_list_process_html (YelpHelpList  *list,
++                        HelpListEntry *entry)
++{
++    htmlDocPtr doc;
++    xmlNode *root = NULL;
++    doc = htmlReadFile ((const char *)entry->filename, NULL,
++                        HTML_PARSE_NOBLANKS |
++                        HTML_PARSE_NOERROR | 
++                        HTML_PARSE_NOWARNING | 
++                        HTML_PARSE_NONET);
++
++    if (!doc)
++        return;
++
++    root = xmlDocGetRootElement (doc);
++    if (root == NULL) {
++        xmlFreeDoc (doc);
++        return;
++    }
++
++    entry->title = help_list_get_html_title (root->children);
++
++    if (doc)
++        xmlFreeDoc (doc);
++
++    xmlCleanupParser ();
++
++    return;
++}
+diff --git a/libyelp/yelp-help-list.h b/libyelp/yelp-help-list.h
+index 07773c0..5aa73f9 100644
+--- a/libyelp/yelp-help-list.h
++++ b/libyelp/yelp-help-list.h
+@@ -34,6 +34,18 @@
+ 
+ typedef struct _YelpHelpList      YelpHelpList;
+ typedef struct _YelpHelpListClass YelpHelpListClass;
++typedef struct _HelpListEntry     HelpListEntry;
++
++struct _HelpListEntry
++{
++    gchar *id;
++    gchar *title;
++    gchar *desc;
++    gchar *icon;
++
++    gchar *filename;
++    YelpUriDocumentType type;
++};
+ 
+ struct _YelpHelpList {
+     YelpDocument      parent;
+@@ -45,5 +57,7 @@ struct _YelpHelpListClass {
+ 
+ GType           yelp_help_list_get_type     (void);
+ YelpDocument *  yelp_help_list_new          (YelpUri *uri);
++GList *         help_list_get_all_entries   (YelpDocument *list);
++void            help_list_entries_init      (YelpHelpList *list);
+ 
+ #endif /* __YELP_HELP_LIST_H__ */
+diff --git a/libyelp/yelp-info-document.c b/libyelp/yelp-info-document.c
+index 0f89f66..d55be32 100644
+--- a/libyelp/yelp-info-document.c
++++ b/libyelp/yelp-info-document.c
+@@ -1,7 +1,7 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+  * Copyright (C) 2007 Don Scorgie <dscorgie@svn.gnome.org>
+- * Copyright (C) 2010-2020 Shaun McCance <shaunm@gnome.org>
++ * Copyright (C) 2010 Shaun McCance <shaunm@gnome.org>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -66,7 +66,6 @@ struct _YelpInfoDocumentPrivate {
+     gchar   *visit_prev_id;
+ };
+ 
+-G_DEFINE_TYPE_WITH_PRIVATE (YelpInfoDocument, yelp_info_document, YELP_TYPE_DOCUMENT)
+ 
+ static void           yelp_info_document_dispose          (GObject                *object);
+ static void           yelp_info_document_finalize         (GObject                *object);
+@@ -98,6 +97,9 @@ static gboolean       info_sections_visit       (GtkTreeModel         *model,
+ static void           info_document_disconnect  (YelpInfoDocument     *info);
+ 
+ 
++G_DEFINE_TYPE (YelpInfoDocument, yelp_info_document, YELP_TYPE_DOCUMENT)
++#define GET_PRIV(object) (G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_INFO_DOCUMENT, YelpInfoDocumentPrivate))
++
+ static void
+ yelp_info_document_class_init (YelpInfoDocumentClass *klass)
+ {
+@@ -108,12 +110,14 @@ yelp_info_document_class_init (YelpInfoDocumentClass *klass)
+     object_class->finalize = yelp_info_document_finalize;
+ 
+     document_class->request_page = info_request_page;
++
++    g_type_class_add_private (klass, sizeof (YelpInfoDocumentPrivate));
+ }
+ 
+ static void
+ yelp_info_document_init (YelpInfoDocument *info)
+ {
+-    YelpInfoDocumentPrivate *priv = yelp_info_document_get_instance_private (info);
++    YelpInfoDocumentPrivate *priv = GET_PRIV (info);
+ 
+     priv->state = INFO_STATE_BLANK;
+     priv->xmldoc = NULL;
+@@ -123,8 +127,7 @@ yelp_info_document_init (YelpInfoDocument *info)
+ static void
+ yelp_info_document_dispose (GObject *object)
+ {
+-    YelpInfoDocumentPrivate *priv =
+-        yelp_info_document_get_instance_private (YELP_INFO_DOCUMENT (object));
++    YelpInfoDocumentPrivate *priv = GET_PRIV (object);
+ 
+     if (priv->sections) {
+         g_object_unref (priv->sections);
+@@ -142,8 +145,7 @@ yelp_info_document_dispose (GObject *object)
+ static void
+ yelp_info_document_finalize (GObject *object)
+ {
+-    YelpInfoDocumentPrivate *priv =
+-        yelp_info_document_get_instance_private (YELP_INFO_DOCUMENT (object));
++    YelpInfoDocumentPrivate *priv = GET_PRIV (object);
+ 
+     if (priv->xmldoc)
+         xmlFreeDoc (priv->xmldoc);
+@@ -180,8 +182,7 @@ info_request_page (YelpDocument         *document,
+                    gpointer              user_data,
+                    GDestroyNotify        notify)
+ {
+-    YelpInfoDocumentPrivate *priv =
+-        yelp_info_document_get_instance_private (YELP_INFO_DOCUMENT (document));
++    YelpInfoDocumentPrivate *priv = GET_PRIV (document);
+     gchar *docuri;
+     GError *error;
+     gboolean handled;
+@@ -243,7 +244,7 @@ transform_chunk_ready (YelpTransform    *transform,
+                        gchar            *chunk_id,
+                        YelpInfoDocument *info)
+ {
+-    YelpInfoDocumentPrivate *priv = yelp_info_document_get_instance_private (info);
++    YelpInfoDocumentPrivate *priv = GET_PRIV (info);
+     gchar *content;
+ 
+     g_assert (transform == priv->transform);
+@@ -273,7 +274,7 @@ static void
+ transform_finished (YelpTransform    *transform,
+                     YelpInfoDocument *info)
+ {
+-    YelpInfoDocumentPrivate *priv = yelp_info_document_get_instance_private (info);
++    YelpInfoDocumentPrivate *priv = GET_PRIV (info);
+     gchar *docuri;
+     GError *error;
+ 
+@@ -308,7 +309,7 @@ static void
+ transform_error (YelpTransform    *transform,
+                  YelpInfoDocument *info)
+ {
+-    YelpInfoDocumentPrivate *priv = yelp_info_document_get_instance_private (info);
++    YelpInfoDocumentPrivate *priv = GET_PRIV (info);
+     GError *error;
+ 
+     g_assert (transform == priv->transform);
+@@ -329,7 +330,7 @@ static void
+ transform_finalized (YelpInfoDocument *info,
+                      gpointer          transform)
+ {
+-    YelpInfoDocumentPrivate *priv = yelp_info_document_get_instance_private (info);
++    YelpInfoDocumentPrivate *priv = GET_PRIV (info);
+  
+     if (priv->xmldoc)
+ 	xmlFreeDoc (priv->xmldoc);
+@@ -344,7 +345,7 @@ transform_finalized (YelpInfoDocument *info,
+ static void
+ info_document_process (YelpInfoDocument *info)
+ {
+-    YelpInfoDocumentPrivate *priv = yelp_info_document_get_instance_private (info);
++    YelpInfoDocumentPrivate *priv = GET_PRIV (info);
+     GFile *file = NULL;
+     gchar *filepath = NULL;
+     GError *error;
+@@ -428,7 +429,7 @@ info_sections_visit (GtkTreeModel     *model,
+                      GtkTreeIter      *iter,
+                      YelpInfoDocument *info)
+ {
+-    YelpInfoDocumentPrivate *priv = yelp_info_document_get_instance_private (info);
++    YelpInfoDocumentPrivate *priv = GET_PRIV (info);
+     gchar *page_id, *title;
+ 
+     gtk_tree_model_get (model, iter,
+@@ -457,7 +458,7 @@ info_sections_visit (GtkTreeModel     *model,
+ static void
+ info_document_disconnect (YelpInfoDocument *info)
+ {
+-    YelpInfoDocumentPrivate *priv = yelp_info_document_get_instance_private (info);
++    YelpInfoDocumentPrivate *priv = GET_PRIV (info);
+     if (priv->chunk_ready) {
+         g_signal_handler_disconnect (priv->transform, priv->chunk_ready);
+         priv->chunk_ready = 0;
+diff --git a/libyelp/yelp-mallard-document.c b/libyelp/yelp-mallard-document.c
+index 6a5b643..0f4a39b 100644
+--- a/libyelp/yelp-mallard-document.c
++++ b/libyelp/yelp-mallard-document.c
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2009-2020 Shaun McCance  <shaunm@gnome.org>
++ * Copyright (C) 2009 Shaun McCance  <shaunm@gnome.org>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -115,6 +115,9 @@ static gboolean       xml_node_is_ns_name       (xmlNodePtr            node,
+                                                  const xmlChar        *name);
+ 
+ 
++G_DEFINE_TYPE (YelpMallardDocument, yelp_mallard_document, YELP_TYPE_DOCUMENT)
++#define GET_PRIV(object) (G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_MALLARD_DOCUMENT, YelpMallardDocumentPrivate))
++
+ typedef struct _YelpMallardDocumentPrivate  YelpMallardDocumentPrivate;
+ struct _YelpMallardDocumentPrivate {
+     MallardState   state;
+@@ -136,8 +139,6 @@ struct _YelpMallardDocumentPrivate {
+     xmlXPathCompExprPtr  normalize;
+ };
+ 
+-G_DEFINE_TYPE_WITH_PRIVATE (YelpMallardDocument, yelp_mallard_document, YELP_TYPE_DOCUMENT)
+-
+ /******************************************************************************/
+ 
+ static void
+@@ -151,12 +152,14 @@ yelp_mallard_document_class_init (YelpMallardDocumentClass *klass)
+ 
+     document_class->request_page = mallard_request_page;
+     document_class->index = mallard_index;
++
++    g_type_class_add_private (klass, sizeof (YelpMallardDocumentPrivate));
+ }
+ 
+ static void
+ yelp_mallard_document_init (YelpMallardDocument *mallard)
+ {
+-    YelpMallardDocumentPrivate *priv = yelp_mallard_document_get_instance_private (mallard);
++    YelpMallardDocumentPrivate *priv = GET_PRIV (mallard);
+     xmlNodePtr cur;
+ 
+     g_mutex_init (&priv->mutex);
+@@ -182,8 +185,7 @@ static void
+ yelp_mallard_document_dispose (GObject *object)
+ {
+     gint i;
+-    YelpMallardDocumentPrivate *priv =
+-        yelp_mallard_document_get_instance_private (YELP_MALLARD_DOCUMENT (object));
++    YelpMallardDocumentPrivate *priv = GET_PRIV (object);
+ 
+     if (priv->monitors != NULL) {
+         for (i = 0; priv->monitors[i]; i++) {
+@@ -199,8 +201,7 @@ yelp_mallard_document_dispose (GObject *object)
+ static void
+ yelp_mallard_document_finalize (GObject *object)
+ {
+-    YelpMallardDocumentPrivate *priv =
+-        yelp_mallard_document_get_instance_private (YELP_MALLARD_DOCUMENT (object));
++    YelpMallardDocumentPrivate *priv = GET_PRIV (object);
+ 
+     g_mutex_clear (&priv->mutex);
+     g_hash_table_destroy (priv->pages_hash);
+@@ -227,7 +228,7 @@ yelp_mallard_document_new (YelpUri *uri)
+     mallard = (YelpMallardDocument *) g_object_new (YELP_TYPE_MALLARD_DOCUMENT,
+                                                     "document-uri", uri,
+                                                     NULL);
+-    priv = yelp_mallard_document_get_instance_private (mallard);
++    priv = GET_PRIV (mallard);
+ 
+     yelp_document_set_page_id ((YelpDocument *) mallard, NULL, "index");
+     yelp_document_set_page_id ((YelpDocument *) mallard, "index", "index");
+@@ -258,15 +259,13 @@ mallard_request_page (YelpDocument         *document,
+                       gpointer              user_data,
+                       GDestroyNotify        notify)
+ {
+-    YelpMallardDocumentPrivate *priv =
+-        yelp_mallard_document_get_instance_private (YELP_MALLARD_DOCUMENT (document));
++    YelpMallardDocumentPrivate *priv = GET_PRIV (document);
+     gchar *docuri;
+     GError *error;
+     gboolean handled;
+ 
+     debug_print (DB_FUNCTION, "entering\n");
+     debug_print (DB_ARG, "    page_id=\"%s\"\n", page_id);
+-
+     if (page_id == NULL)
+         page_id = "index";
+ 
+@@ -326,7 +325,7 @@ mallard_request_page (YelpDocument         *document,
+ static void
+ mallard_think (YelpMallardDocument *mallard)
+ {
+-    YelpMallardDocumentPrivate *priv = yelp_mallard_document_get_instance_private (mallard);
++    YelpMallardDocumentPrivate *priv = GET_PRIV (mallard);
+     GError *error = NULL;
+     gboolean editor_mode;
+ 
+@@ -442,7 +441,7 @@ mallard_try_run (YelpMallardDocument *mallard,
+                  const gchar         *page_id)
+ {
+     /* We expect to be in a locked mutex when this function is called. */
+-    YelpMallardDocumentPrivate *priv = yelp_mallard_document_get_instance_private (mallard);
++    YelpMallardDocumentPrivate *priv = GET_PRIV (mallard);
+     MallardPageData *page_data = NULL;
+     gchar *real_id = NULL;
+     GError *error;
+@@ -507,7 +506,7 @@ mallard_page_data_cancel (MallardPageData *page_data)
+ static void
+ mallard_page_data_walk (MallardPageData *page_data)
+ {
+-    YelpMallardDocumentPrivate *priv = yelp_mallard_document_get_instance_private (page_data->mallard);
++    YelpMallardDocumentPrivate *priv = GET_PRIV (page_data->mallard);
+     xmlParserCtxtPtr parserCtxt = NULL;
+     xmlChar *id = NULL;
+ 
+@@ -649,8 +648,7 @@ mallard_page_data_info (MallardPageData *page_data,
+                 if (xmlStrEqual (type, BAD_CAST "sort"))
+                     page_data->sort_title = TRUE;
+                 if (xmlStrEqual (type, BAD_CAST "text")) {
+-                    YelpMallardDocumentPrivate *priv =
+-                        yelp_mallard_document_get_instance_private (page_data->mallard);
++                    YelpMallardDocumentPrivate *priv = GET_PRIV (page_data->mallard);
+                     xmlXPathObjectPtr obj;
+                     page_data->xpath->node = child;
+                     obj = xmlXPathCompiledEval (priv->normalize, page_data->xpath);
+@@ -664,7 +662,7 @@ mallard_page_data_info (MallardPageData *page_data,
+             }
+         }
+         else if (xml_node_is_ns_name (child, MALLARD_NS, BAD_CAST "desc")) {
+-            YelpMallardDocumentPrivate *priv = yelp_mallard_document_get_instance_private (page_data->mallard);
++            YelpMallardDocumentPrivate *priv = GET_PRIV (page_data->mallard);
+             xmlXPathObjectPtr obj;
+             page_data->xpath->node = child;
+             obj = xmlXPathCompiledEval (priv->normalize, page_data->xpath);
+@@ -677,7 +675,7 @@ mallard_page_data_info (MallardPageData *page_data,
+         else if (xml_node_is_ns_name (child, MALLARD_NS, BAD_CAST "keywords")) {
+             /* FIXME: multiple keywords? same for desc/title */
+ 
+-            YelpMallardDocumentPrivate *priv = yelp_mallard_document_get_instance_private (page_data->mallard);
++            YelpMallardDocumentPrivate *priv = GET_PRIV (page_data->mallard);
+             xmlXPathObjectPtr obj;
+             page_data->xpath->node = child;
+             obj = xmlXPathCompiledEval (priv->normalize, page_data->xpath);
+@@ -722,7 +720,7 @@ static void
+ mallard_page_data_run (MallardPageData *page_data)
+ {
+     YelpSettings *settings = yelp_settings_get_default ();
+-    YelpMallardDocumentPrivate *priv = yelp_mallard_document_get_instance_private (page_data->mallard);
++    YelpMallardDocumentPrivate *priv = GET_PRIV (page_data->mallard);
+     gchar **params = NULL;
+ 
+     mallard_page_data_cancel (page_data);
+@@ -791,7 +789,7 @@ transform_chunk_ready (YelpTransform   *transform,
+               YELP_IS_MALLARD_DOCUMENT (page_data->mallard));
+     g_assert (transform == page_data->transform);
+ 
+-    priv = yelp_mallard_document_get_instance_private (page_data->mallard);
++    priv = GET_PRIV (page_data->mallard);
+ 
+     if (priv->state == MALLARD_STATE_STOP) {
+         mallard_page_data_cancel (page_data);
+@@ -820,7 +818,7 @@ transform_finished (YelpTransform   *transform,
+               YELP_IS_MALLARD_DOCUMENT (page_data->mallard));
+     g_assert (transform == page_data->transform);
+ 
+-    priv = yelp_mallard_document_get_instance_private (page_data->mallard);
++    priv = GET_PRIV (page_data->mallard);
+ 
+     if (priv->state == MALLARD_STATE_STOP) {
+         mallard_page_data_cancel (page_data);
+@@ -845,7 +843,7 @@ transform_error (YelpTransform   *transform,
+               YELP_IS_MALLARD_DOCUMENT (page_data->mallard));
+     g_assert (transform == page_data->transform);
+ 
+-    priv = yelp_mallard_document_get_instance_private (page_data->mallard);
++    priv = GET_PRIV (page_data->mallard);
+ 
+     if (priv->state == MALLARD_STATE_STOP) {
+         mallard_page_data_cancel (page_data);
+@@ -991,7 +989,7 @@ mallard_index_threaded (YelpMallardDocument *mallard)
+     GHashTable *ids;
+     gchar *doc_uri;
+     YelpUri *document_uri;
+-    YelpMallardDocumentPrivate *priv = yelp_mallard_document_get_instance_private (mallard);
++    YelpMallardDocumentPrivate *priv = GET_PRIV (mallard);
+ 
+     document_uri = yelp_document_get_uri (YELP_DOCUMENT (mallard));
+     doc_uri = yelp_uri_get_document_uri (document_uri);
+@@ -1126,7 +1124,7 @@ mallard_index (YelpDocument *document)
+     if (done)
+         return;
+ 
+-    priv = yelp_mallard_document_get_instance_private (YELP_MALLARD_DOCUMENT (document));
++    priv = GET_PRIV (document);
+     g_object_ref (document);
+     priv->index = g_thread_new ("mallard-index",
+                                 (GThreadFunc)(GCallback) mallard_index_threaded,
+@@ -1144,7 +1142,7 @@ mallard_monitor_changed (GFileMonitor         *monitor,
+     gchar **ids;
+     gint i;
+     xmlNodePtr cur;
+-    YelpMallardDocumentPrivate *priv = yelp_mallard_document_get_instance_private (mallard);
++    YelpMallardDocumentPrivate *priv = GET_PRIV (mallard);
+ 
+     /* Exiting the thinking thread would require a fair amount of retooling.
+        For now, we'll just fail to auto-reload if that's still happening.
+@@ -1168,7 +1166,6 @@ mallard_monitor_changed (GFileMonitor         *monitor,
+     xmlFreeDoc (priv->cache);
+     priv->cache = xmlNewDoc (BAD_CAST "1.0");
+     priv->cache_ns = xmlNewNs (NULL, CACHE_NS, BAD_CAST "cache");
+-    priv->mallard_ns = xmlNewNs (NULL, MALLARD_NS, BAD_CAST "mal");
+     cur = xmlNewDocNode (priv->cache, priv->cache_ns, BAD_CAST "cache", NULL);
+     xmlDocSetRootElement (priv->cache, cur);
+     priv->cache_ns->next = priv->mallard_ns;
+diff --git a/libyelp/yelp-man-document.c b/libyelp/yelp-man-document.c
+index dba8a1d..a18248c 100644
+--- a/libyelp/yelp-man-document.c
++++ b/libyelp/yelp-man-document.c
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2007-2020 Shaun McCance <shaunm@gnome.org>
++ * Copyright (C) 2007-2010 Shaun McCance <shaunm@gnome.org>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -61,8 +61,6 @@ struct _YelpManDocumentPrivate {
+     guint          error;
+ };
+ 
+-G_DEFINE_TYPE_WITH_PRIVATE (YelpManDocument, yelp_man_document, YELP_TYPE_DOCUMENT)
+-
+ static void           yelp_man_document_finalize         (GObject                *object);
+ 
+ /* YelpDocument */
+@@ -90,6 +88,9 @@ static void           man_document_process               (YelpManDocument
+ static void           man_document_disconnect            (YelpManDocument        *man);
+ 
+ 
++G_DEFINE_TYPE (YelpManDocument, yelp_man_document, YELP_TYPE_DOCUMENT)
++#define GET_PRIV(object) (G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_MAN_DOCUMENT, YelpManDocumentPrivate))
++
+ static void
+ yelp_man_document_class_init (YelpManDocumentClass *klass)
+ {
+@@ -99,12 +100,14 @@ yelp_man_document_class_init (YelpManDocumentClass *klass)
+     object_class->finalize = yelp_man_document_finalize;
+ 
+     document_class->request_page = man_request_page;
++
++    g_type_class_add_private (klass, sizeof (YelpManDocumentPrivate));
+ }
+ 
+ static void
+ yelp_man_document_init (YelpManDocument *man)
+ {
+-    YelpManDocumentPrivate *priv = yelp_man_document_get_instance_private (man);
++    YelpManDocumentPrivate *priv = GET_PRIV (man);
+ 
+     priv->state = MAN_STATE_BLANK;
+     g_mutex_init (&priv->mutex);
+@@ -113,8 +116,7 @@ yelp_man_document_init (YelpManDocument *man)
+ static void
+ yelp_man_document_finalize (GObject *object)
+ {
+-    YelpManDocumentPrivate *priv =
+-        yelp_man_document_get_instance_private (YELP_MAN_DOCUMENT (object));
++    YelpManDocumentPrivate *priv = GET_PRIV (object);
+ 
+     if (priv->xmldoc)
+ 	xmlFreeDoc (priv->xmldoc);
+@@ -149,8 +151,7 @@ man_request_page (YelpDocument         *document,
+                   gpointer              user_data,
+                   GDestroyNotify        notify)
+ {
+-    YelpManDocumentPrivate *priv =
+-        yelp_man_document_get_instance_private (YELP_MAN_DOCUMENT (document));
++    YelpManDocumentPrivate *priv = GET_PRIV (document);
+     gchar *docuri, *fulluri;
+     GError *error;
+     gboolean handled;
+@@ -221,7 +222,7 @@ transform_chunk_ready (YelpTransform    *transform,
+                        gchar            *chunk_id,
+                        YelpManDocument  *man)
+ {
+-    YelpManDocumentPrivate *priv = yelp_man_document_get_instance_private (man);
++    YelpManDocumentPrivate *priv = GET_PRIV (man);
+     gchar *content;
+ 
+     g_assert (transform == priv->transform);
+@@ -251,7 +252,7 @@ static void
+ transform_finished (YelpTransform    *transform,
+                     YelpManDocument  *man)
+ {
+-    YelpManDocumentPrivate *priv = yelp_man_document_get_instance_private (man);
++    YelpManDocumentPrivate *priv = GET_PRIV (man);
+     gchar *docuri;
+     GError *error;
+ 
+@@ -286,7 +287,7 @@ static void
+ transform_error (YelpTransform    *transform,
+                  YelpManDocument  *man)
+ {
+-    YelpManDocumentPrivate *priv = yelp_man_document_get_instance_private (man);
++    YelpManDocumentPrivate *priv = GET_PRIV (man);
+     GError *error;
+ 
+     g_assert (transform == priv->transform);
+@@ -307,7 +308,7 @@ static void
+ transform_finalized (YelpManDocument  *man,
+                      gpointer          transform)
+ {
+-    YelpManDocumentPrivate *priv = yelp_man_document_get_instance_private (man);
++    YelpManDocumentPrivate *priv = GET_PRIV (man);
+  
+     if (priv->xmldoc)
+ 	xmlFreeDoc (priv->xmldoc);
+@@ -321,7 +322,7 @@ transform_finalized (YelpManDocument  *man,
+ static void
+ man_document_process (YelpManDocument *man)
+ {
+-    YelpManDocumentPrivate *priv = yelp_man_document_get_instance_private (man);
++    YelpManDocumentPrivate *priv = GET_PRIV (man);
+     GFile *file = NULL;
+     gchar *filepath = NULL;
+     GError *error;
+@@ -396,7 +397,7 @@ man_document_process (YelpManDocument *man)
+ static void
+ man_document_disconnect (YelpManDocument *man)
+ {
+-    YelpManDocumentPrivate *priv = yelp_man_document_get_instance_private (man);
++    YelpManDocumentPrivate *priv = GET_PRIV (man);
+     if (priv->chunk_ready) {
+         g_signal_handler_disconnect (priv->transform, priv->chunk_ready);
+         priv->chunk_ready = 0;
+diff --git a/libyelp/yelp-man-parser.c b/libyelp/yelp-man-parser.c
+index 91522b7..0217987 100644
+--- a/libyelp/yelp-man-parser.c
++++ b/libyelp/yelp-man-parser.c
+@@ -832,6 +832,7 @@ parse_n (YelpManParser *parser, GError **error)
+         xmlNewTextChild (parser->section_node, NULL,
+                          BAD_CAST "title",
+                          BAD_CAST parser->accumulator->str);
++
+         g_string_truncate (parser->accumulator, 0);
+ 
+         parser->section_state = SECTION_BODY;
+@@ -1266,7 +1267,7 @@ unicode_strstrip (gchar *str)
+     }
+     start = skip_whitespace (str);
+ 
+-    memmove (str, start, end - start);
++    g_memmove (str, start, end - start);
+     *(str + (end - start)) = '\0';
+ }
+ 
+diff --git a/libyelp/yelp-search-entry.c b/libyelp/yelp-search-entry.c
+index 0284a3f..2b5a819 100644
+--- a/libyelp/yelp-search-entry.c
++++ b/libyelp/yelp-search-entry.c
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2009-2020 Shaun McCance <shaunm@gnome.org>
++ * Copyright (C) 2009-2014 Shaun McCance <shaunm@gnome.org>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -123,7 +123,8 @@ static GHashTable *completions;
+ 
+ static guint search_entry_signals[LAST_SIGNAL] = {0,};
+ 
+-G_DEFINE_TYPE_WITH_PRIVATE (YelpSearchEntry, yelp_search_entry, GTK_TYPE_SEARCH_ENTRY)
++G_DEFINE_TYPE (YelpSearchEntry, yelp_search_entry, GTK_TYPE_SEARCH_ENTRY)
++#define GET_PRIV(object) (G_TYPE_INSTANCE_GET_PRIVATE((object), YELP_TYPE_SEARCH_ENTRY, YelpSearchEntryPrivate))
+ 
+ static void
+ yelp_search_entry_class_init (YelpSearchEntryClass *klass)
+@@ -192,6 +193,9 @@ yelp_search_entry_class_init (YelpSearchEntryClass *klass)
+ 							  G_PARAM_READWRITE |
+                                                           G_PARAM_STATIC_STRINGS));
+ 
++    g_type_class_add_private ((GObjectClass *) klass,
++                              sizeof (YelpSearchEntryPrivate));
++
+     completions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
+ }
+ 
+@@ -203,8 +207,7 @@ yelp_search_entry_init (YelpSearchEntry *entry)
+ static void
+ search_entry_constructed (GObject *object)
+ {
+-    YelpSearchEntryPrivate *priv =
+-        yelp_search_entry_get_instance_private (YELP_SEARCH_ENTRY (object));
++    YelpSearchEntryPrivate *priv = GET_PRIV (object);
+ 
+     g_signal_connect (object, "activate",
+                       G_CALLBACK (entry_activate_cb), object);
+@@ -215,8 +218,7 @@ search_entry_constructed (GObject *object)
+ static void
+ search_entry_dispose (GObject *object)
+ {
+-    YelpSearchEntryPrivate *priv =
+-        yelp_search_entry_get_instance_private (YELP_SEARCH_ENTRY (object));
++    YelpSearchEntryPrivate *priv = GET_PRIV (object);
+ 
+     if (priv->view) {
+         g_object_unref (priv->view);
+@@ -234,8 +236,7 @@ search_entry_dispose (GObject *object)
+ static void
+ search_entry_finalize (GObject *object)
+ {
+-    YelpSearchEntryPrivate *priv =
+-        yelp_search_entry_get_instance_private (YELP_SEARCH_ENTRY (object));
++    YelpSearchEntryPrivate *priv = GET_PRIV (object);
+ 
+     g_free (priv->completion_uri);
+ 
+@@ -248,8 +249,7 @@ search_entry_get_property   (GObject      *object,
+                                GValue       *value,
+                                GParamSpec   *pspec)
+ {
+-    YelpSearchEntryPrivate *priv =
+-        yelp_search_entry_get_instance_private (YELP_SEARCH_ENTRY (object));
++    YelpSearchEntryPrivate *priv = GET_PRIV (object);
+ 
+     switch (prop_id) {
+     case PROP_VIEW:
+@@ -270,8 +270,7 @@ search_entry_set_property   (GObject      *object,
+                                const GValue *value,
+                                GParamSpec   *pspec)
+ {
+-    YelpSearchEntryPrivate *priv =
+-        yelp_search_entry_get_instance_private (YELP_SEARCH_ENTRY (object));
++    YelpSearchEntryPrivate *priv = GET_PRIV (object);
+ 
+     switch (prop_id) {
+     case PROP_VIEW:
+@@ -290,7 +289,7 @@ static void
+ search_entry_search_activated  (YelpSearchEntry *entry)
+ {
+     YelpUri *base, *uri;
+-    YelpSearchEntryPrivate *priv = yelp_search_entry_get_instance_private (entry);
++    YelpSearchEntryPrivate *priv = GET_PRIV (entry);
+ 
+     g_object_get (priv->view, "yelp-uri", &base, NULL);
+     if (base == NULL)
+@@ -307,7 +306,7 @@ search_entry_bookmark_clicked  (YelpSearchEntry *entry)
+ {
+     YelpUri *uri;
+     gchar *doc_uri, *page_id;
+-    YelpSearchEntryPrivate *priv = yelp_search_entry_get_instance_private (entry);
++    YelpSearchEntryPrivate *priv = GET_PRIV (entry);
+ 
+     g_object_get (priv->view,
+                   "yelp-uri", &uri,
+@@ -338,7 +337,7 @@ static void
+ search_entry_set_completion (YelpSearchEntry *entry,
+ 			     GtkTreeModel    *model)
+ {
+-    YelpSearchEntryPrivate *priv = yelp_search_entry_get_instance_private (entry);
++    YelpSearchEntryPrivate *priv = GET_PRIV (entry);
+     GList *cells;
+     GtkCellRenderer *icon_cell, *bookmark_cell;
+ 
+@@ -402,7 +401,7 @@ cell_set_completion_bookmark_icon (GtkCellLayout     *layout,
+                                    GtkTreeIter       *iter,
+                                    YelpSearchEntry *entry)
+ {
+-    YelpSearchEntryPrivate *priv = yelp_search_entry_get_instance_private (entry);
++    YelpSearchEntryPrivate *priv = GET_PRIV (entry);
+ 
+     if (priv->completion_uri) {
+         gchar *page_id = NULL;
+@@ -556,7 +555,7 @@ entry_match_selected (GtkEntryCompletion *completion,
+     YelpUri *base, *uri;
+     gchar *page, *xref;
+     gint flags;
+-    YelpSearchEntryPrivate *priv = yelp_search_entry_get_instance_private (entry);
++    YelpSearchEntryPrivate *priv = GET_PRIV (entry);
+ 
+     gtk_tree_model_get (model, iter, COMPLETION_COL_FLAGS, &flags, -1);
+     if (flags & COMPLETION_FLAG_ACTIVATE_SEARCH) {
+@@ -591,7 +590,7 @@ view_loaded (YelpView          *view,
+     YelpUri *uri;
+     gchar *doc_uri;
+     GtkTreeModel *completion;
+-    YelpSearchEntryPrivate *priv = yelp_search_entry_get_instance_private (entry);
++    YelpSearchEntryPrivate *priv = GET_PRIV (entry);
+     YelpDocument *document = yelp_view_get_document (view);
+ 
+     g_object_get (view, "yelp-uri", &uri, NULL);
+diff --git a/libyelp/yelp-settings.c b/libyelp/yelp-settings.c
+index 38cb40f..05bbfb3 100644
+--- a/libyelp/yelp-settings.c
++++ b/libyelp/yelp-settings.c
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2004-2020 Shaun McCance <shaunm@gnome.org>
++ * Copyright (C) 2004-2009 Shaun McCance <shaunm@gnome.org>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -29,7 +29,7 @@
+ 
+ #include "yelp-settings.h"
+ 
+-struct _YelpSettingsPrivate {
++struct _YelpSettingsPriv {
+     GMutex        mutex;
+ 
+     gchar         colors[YELP_SETTINGS_NUM_COLORS][8];
+@@ -73,7 +73,8 @@ enum {
+ 
+ static const gchar *icon_names[YELP_SETTINGS_NUM_ICONS];
+ 
+-G_DEFINE_TYPE_WITH_PRIVATE (YelpSettings, yelp_settings, G_TYPE_OBJECT)
++G_DEFINE_TYPE (YelpSettings, yelp_settings, G_TYPE_OBJECT)
++#define GET_PRIV(object) (G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_SETTINGS, YelpSettingsPriv))
+ 
+ static void           yelp_settings_constructed  (GObject              *object);
+ static void           yelp_settings_finalize     (GObject              *object);
+@@ -209,6 +210,8 @@ yelp_settings_class_init (YelpSettingsClass *klass)
+ 		      0, NULL, NULL,
+ 		      g_cclosure_marshal_VOID__VOID,
+ 		      G_TYPE_NONE, 0);
++
++    g_type_class_add_private (klass, sizeof (YelpSettingsPriv));
+ }
+ 
+ static void
+@@ -216,7 +219,7 @@ yelp_settings_init (YelpSettings *settings)
+ {
+     gint i;
+ 
+-    settings->priv = yelp_settings_get_instance_private (settings);
++    settings->priv = GET_PRIV (settings);
+     g_mutex_init (&settings->priv->mutex);
+     settings->priv->icon_size = 24;
+ 
+diff --git a/libyelp/yelp-settings.h b/libyelp/yelp-settings.h
+index 84ced04..447cf4e 100644
+--- a/libyelp/yelp-settings.h
++++ b/libyelp/yelp-settings.h
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2004-2020 Shaun McCance <shaunm@gnome.org>
++ * Copyright (C) 2004-2009 Shaun McCance <shaunm@gnome.org>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -32,13 +32,13 @@ G_BEGIN_DECLS
+ #define YELP_IS_SETTINGS_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), YELP_TYPE_SETTINGS))
+ #define YELP_SETTINGS_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), YELP_TYPE_SETTINGS, YelpSettingsClass))
+ 
+-typedef struct _YelpSettings        YelpSettings;
+-typedef struct _YelpSettingsClass   YelpSettingsClass;
+-typedef struct _YelpSettingsPrivate YelpSettingsPrivate;
++typedef struct _YelpSettings      YelpSettings;
++typedef struct _YelpSettingsClass YelpSettingsClass;
++typedef struct _YelpSettingsPriv  YelpSettingsPriv;
+ 
+ struct _YelpSettings {
+-    GObject              parent;
+-    YelpSettingsPrivate *priv;
++    GObject           parent;
++    YelpSettingsPriv *priv;
+ };
+ 
+ struct _YelpSettingsClass {
+diff --git a/libyelp/yelp-simple-document.c b/libyelp/yelp-simple-document.c
+index 735e182..e019fad 100644
+--- a/libyelp/yelp-simple-document.c
++++ b/libyelp/yelp-simple-document.c
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2003-2020 Shaun McCance  <shaunm@gnome.org>
++ * Copyright (C) 2003-2009 Shaun McCance  <shaunm@gnome.org>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -39,7 +39,7 @@ struct _Request {
+     gint                  idle_funcs;
+ };
+ 
+-struct _YelpSimpleDocumentPrivate {
++struct _YelpSimpleDocumentPriv {
+     GFile        *file;
+     GInputStream *stream;
+     gchar        *page_id;
+@@ -56,7 +56,8 @@ struct _YelpSimpleDocumentPrivate {
+ 
+ #define BUFFER_SIZE 4096
+ 
+-G_DEFINE_TYPE_WITH_PRIVATE (YelpSimpleDocument, yelp_simple_document, YELP_TYPE_DOCUMENT)
++G_DEFINE_TYPE (YelpSimpleDocument, yelp_simple_document, YELP_TYPE_DOCUMENT)
++#define GET_PRIV(object) (G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_SIMPLE_DOCUMENT, YelpSimpleDocumentPriv))
+ 
+ static void           yelp_simple_document_dispose     (GObject                 *object);
+ static void           yelp_simple_document_finalize    (GObject                 *object);
+@@ -106,12 +107,14 @@ yelp_simple_document_class_init (YelpSimpleDocumentClass *klass)
+     document_class->read_contents = document_read_contents;
+     document_class->finish_read = document_finish_read;
+     document_class->get_mime_type = document_get_mime_type;
++
++    g_type_class_add_private (klass, sizeof (YelpSimpleDocumentPriv));
+ }
+ 
+ static void
+ yelp_simple_document_init (YelpSimpleDocument *document)
+ {
+-    document->priv = yelp_simple_document_get_instance_private (document);
++    document->priv = GET_PRIV (document);
+ 
+     document->priv->file = NULL;
+     document->priv->stream = NULL;
+@@ -192,9 +195,12 @@ document_request_page (YelpDocument         *document,
+     request->callback = callback;
+     request->user_data = user_data;
+ 
+-    request->cancellable = g_object_ref (cancellable);
+-    g_signal_connect (cancellable, "cancelled",
+-		      G_CALLBACK (request_cancel), request);
++    if (cancellable) {
++        request->cancellable = g_object_ref (cancellable);
++
++        g_signal_connect (cancellable, "cancelled",
++	    	      G_CALLBACK (request_cancel), request);
++    }
+ 
+     simple->priv->reqs = g_slist_prepend (simple->priv->reqs, request);
+ 
+@@ -376,7 +382,14 @@ stream_read_cb (GInputStream       *stream,
+ 	   byte.  I'm 99.99% certain I'm right.
+ 	 */
+ 	g_assert (document->priv->contents_read < document->priv->contents_len);
+-	document->priv->contents[document->priv->contents_read + 1] = '\0';
++
++  // 메모리를 재할당 하는 로직으로 파싱 속도가 느려질 수 있음...
++  // 확인 후 이상 없는 경우 아래와 같이 수정.
++  //document->priv->contents[document->priv->contents_len] = '\0';
++  document->priv->contents_len = document->priv->contents_read + 1;
++  document->priv->contents = g_realloc (document->priv->contents,
++                  document->priv->contents_len);
++  document->priv->contents[document->priv->contents_len - 1] = '\0';
+ 	g_input_stream_close_async (document->priv->stream,
+ 				    G_PRIORITY_DEFAULT,
+ 				    NULL,
+diff --git a/libyelp/yelp-simple-document.h b/libyelp/yelp-simple-document.h
+index de306f8..4ef78f6 100644
+--- a/libyelp/yelp-simple-document.h
++++ b/libyelp/yelp-simple-document.h
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2003-2020 Shaun McCance  <shaunm@gnome.org>
++ * Copyright (C) 2003-2009 Shaun McCance  <shaunm@gnome.org>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -36,13 +36,13 @@ G_BEGIN_DECLS
+ #define YELP_IS_SIMPLE_DOCUMENT_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), YELP_TYPE_SIMPLE_DOCUMENT))
+ #define YELP_SIMPLE_DOCUMENT_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), YELP_TYPE_SIMPLE_DOCUMENT, YelpSimpleDocumentClass))
+ 
+-typedef struct _YelpSimpleDocument        YelpSimpleDocument;
+-typedef struct _YelpSimpleDocumentClass   YelpSimpleDocumentClass;
+-typedef struct _YelpSimpleDocumentPrivate YelpSimpleDocumentPrivate;
++typedef struct _YelpSimpleDocument      YelpSimpleDocument;
++typedef struct _YelpSimpleDocumentClass YelpSimpleDocumentClass;
++typedef struct _YelpSimpleDocumentPriv  YelpSimpleDocumentPriv;
+ 
+ struct _YelpSimpleDocument {
+     YelpDocument parent;
+-    YelpSimpleDocumentPrivate *priv;
++    YelpSimpleDocumentPriv *priv;
+ };
+ 
+ struct _YelpSimpleDocumentClass {
+diff --git a/libyelp/yelp-sqlite-storage.c b/libyelp/yelp-sqlite-storage.c
+index 42853fb..c872f72 100644
+--- a/libyelp/yelp-sqlite-storage.c
++++ b/libyelp/yelp-sqlite-storage.c
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2011-2020 Shaun McCance <shaunm@gnome.org>
++ * Copyright (C) 2011 Shaun McCance <shaunm@gnome.org>
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+@@ -66,14 +66,13 @@ enum {
+ 
+ G_DEFINE_TYPE_WITH_CODE (YelpSqliteStorage, yelp_sqlite_storage, G_TYPE_OBJECT,
+                          G_IMPLEMENT_INTERFACE (YELP_TYPE_STORAGE,
+-                                                yelp_sqlite_storage_iface_init)
+-                         G_ADD_PRIVATE (YelpSqliteStorage) )
++                                                yelp_sqlite_storage_iface_init))
++#define GET_PRIV(object)(G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_SQLITE_STORAGE, YelpSqliteStoragePrivate))
+ 
+ static void
+ yelp_sqlite_storage_finalize (GObject *object)
+ {
+-    YelpSqliteStoragePrivate *priv =
+-        yelp_sqlite_storage_get_instance_private (YELP_SQLITE_STORAGE (object));
++    YelpSqliteStoragePrivate *priv = GET_PRIV (object);
+ 
+     if (priv->filename)
+         g_free (priv->filename);
+@@ -89,7 +88,7 @@ yelp_sqlite_storage_finalize (GObject *object)
+ static void
+ yelp_sqlite_storage_init (YelpSqliteStorage *storage)
+ {
+-    YelpSqliteStoragePrivate *priv = yelp_sqlite_storage_get_instance_private (storage);
++    YelpSqliteStoragePrivate *priv = GET_PRIV (storage);
+     g_mutex_init (&priv->mutex);
+ }
+ 
+@@ -98,8 +97,7 @@ yelp_sqlite_storage_constructed (GObject *object)
+ {
+     int status;
+     sqlite3_stmt *stmt = NULL;
+-    YelpSqliteStoragePrivate *priv =
+-        yelp_sqlite_storage_get_instance_private (YELP_SQLITE_STORAGE (object));
++    YelpSqliteStoragePrivate *priv = GET_PRIV (object);
+ 
+     if (priv->filename != NULL)
+         status = sqlite3_open (priv->filename, &(priv->db));
+@@ -139,6 +137,8 @@ yelp_sqlite_storage_class_init (YelpSqliteStorageClass *klass)
+     object_class->get_property = yelp_sqlite_storage_get_property;
+     object_class->set_property = yelp_sqlite_storage_set_property;
+ 
++    g_type_class_add_private (klass, sizeof (YelpSqliteStoragePrivate));
++
+     g_object_class_install_property (object_class,
+                                      PROP_FILENAME,
+                                      g_param_spec_string ("filename",
+@@ -176,8 +176,7 @@ yelp_sqlite_storage_get_property (GObject    *object,
+                                   GValue     *value,
+                                   GParamSpec *pspec)
+ {
+-    YelpSqliteStoragePrivate *priv =
+-        yelp_sqlite_storage_get_instance_private (YELP_SQLITE_STORAGE (object));
++    YelpSqliteStoragePrivate *priv = GET_PRIV (object);
+ 
+     switch (prop_id) {
+     case PROP_FILENAME:
+@@ -195,8 +194,7 @@ yelp_sqlite_storage_set_property (GObject      *object,
+                                   const GValue *value,
+                                   GParamSpec   *pspec)
+ {
+-    YelpSqliteStoragePrivate *priv =
+-        yelp_sqlite_storage_get_instance_private (YELP_SQLITE_STORAGE (object));
++    YelpSqliteStoragePrivate *priv = GET_PRIV (object);
+ 
+     switch (prop_id) {
+     case PROP_FILENAME:
+@@ -220,8 +218,7 @@ yelp_sqlite_storage_update (YelpStorage   *storage,
+                             const gchar   *text)
+ {
+     sqlite3_stmt *stmt = NULL;
+-    YelpSqliteStoragePrivate *priv =
+-        yelp_sqlite_storage_get_instance_private (YELP_SQLITE_STORAGE (storage));
++    YelpSqliteStoragePrivate *priv = GET_PRIV (storage);
+ 
+     g_mutex_lock (&priv->mutex);
+ 
+@@ -259,9 +256,7 @@ yelp_sqlite_storage_search (YelpStorage   *storage,
+     sqlite3_stmt *stmt = NULL;
+     GVariantBuilder builder;
+     GVariant *ret;
+-    YelpSqliteStoragePrivate *priv =
+-        yelp_sqlite_storage_get_instance_private (YELP_SQLITE_STORAGE (storage));
+-
++    YelpSqliteStoragePrivate *priv = GET_PRIV (storage);
+ 
+     g_mutex_lock (&priv->mutex);
+ 
+@@ -295,8 +290,7 @@ yelp_sqlite_storage_get_root_title (YelpStorage *storage,
+ {
+     gchar *ret = NULL;
+     sqlite3_stmt *stmt = NULL;
+-    YelpSqliteStoragePrivate *priv =
+-        yelp_sqlite_storage_get_instance_private (YELP_SQLITE_STORAGE (storage));
++    YelpSqliteStoragePrivate *priv = GET_PRIV (storage);
+ 
+     g_mutex_lock (&priv->mutex);
+ 
+@@ -319,8 +313,7 @@ yelp_sqlite_storage_set_root_title (YelpStorage *storage,
+                                     const gchar *title)
+ {
+     sqlite3_stmt *stmt = NULL;
+-    YelpSqliteStoragePrivate *priv =
+-        yelp_sqlite_storage_get_instance_private (YELP_SQLITE_STORAGE (storage));
++    YelpSqliteStoragePrivate *priv = GET_PRIV (storage);
+ 
+     g_mutex_lock (&priv->mutex);
+ 
+diff --git a/libyelp/yelp-transform.c b/libyelp/yelp-transform.c
+index 0107db9..0a1c805 100644
+--- a/libyelp/yelp-transform.c
++++ b/libyelp/yelp-transform.c
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2003-2020 Shaun McCance  <shaunm@gnome.org>
++ * Copyright (C) 2003-2009 Shaun McCance  <shaunm@gnome.org>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -85,6 +85,9 @@ enum {
+ };
+ static gint signals[LAST_SIGNAL] = { 0 };
+ 
++G_DEFINE_TYPE (YelpTransform, yelp_transform, G_TYPE_OBJECT)
++#define GET_PRIV(object)(G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_TRANSFORM, YelpTransformPrivate))
++
+ typedef struct _YelpTransformPrivate YelpTransformPrivate;
+ struct _YelpTransformPrivate {
+     xmlDocPtr                input;
+@@ -109,14 +112,12 @@ struct _YelpTransformPrivate {
+     GError                 *error;
+ };
+ 
+-G_DEFINE_TYPE_WITH_PRIVATE (YelpTransform, yelp_transform, G_TYPE_OBJECT)
+-
+ /******************************************************************************/
+ 
+ static void
+ yelp_transform_init (YelpTransform *transform)
+ {
+-    YelpTransformPrivate *priv = yelp_transform_get_instance_private (transform);
++    YelpTransformPrivate *priv = GET_PRIV (transform);
+     priv->queue = g_async_queue_new_full (g_free);
+     priv->chunks = g_hash_table_new_full (g_str_hash,
+                                           g_str_equal,
+@@ -155,6 +156,8 @@ yelp_transform_class_init (YelpTransformClass *klass)
+                                    g_cclosure_marshal_VOID__VOID,
+                                    G_TYPE_NONE, 0);
+ 
++    g_type_class_add_private (klass, sizeof (YelpTransformPrivate));
++
+     g_object_class_install_property (object_class,
+                                      PROP_STYLESHEET,
+                                      g_param_spec_string ("stylesheet",
+@@ -169,8 +172,7 @@ yelp_transform_class_init (YelpTransformClass *klass)
+ static void
+ yelp_transform_dispose (GObject *object)
+ {
+-    YelpTransformPrivate *priv =
+-        yelp_transform_get_instance_private (YELP_TRANSFORM (object));
++    YelpTransformPrivate *priv = GET_PRIV (object);
+ 
+     debug_print (DB_FUNCTION, "entering\n");
+ 
+@@ -204,7 +206,6 @@ yelp_transform_dispose (GObject *object)
+         xmlFreeDoc (priv->output);
+         priv->output = NULL;
+     }
+-    g_clear_pointer (&priv->stylesheet_file, g_free);
+ 
+     G_OBJECT_CLASS (yelp_transform_parent_class)->dispose (object);
+ }
+@@ -212,8 +213,7 @@ yelp_transform_dispose (GObject *object)
+ static void
+ yelp_transform_finalize (GObject *object)
+ {
+-    YelpTransformPrivate *priv =
+-        yelp_transform_get_instance_private (YELP_TRANSFORM (object));
++    YelpTransformPrivate *priv = GET_PRIV (object);
+     GHashTableIter iter;
+     gpointer chunk;
+ 
+@@ -239,8 +239,7 @@ yelp_transform_get_property (GObject    *object,
+                              GValue     *value,
+                              GParamSpec *pspec)
+ {
+-    YelpTransformPrivate *priv =
+-        yelp_transform_get_instance_private (YELP_TRANSFORM (object));
++    YelpTransformPrivate *priv = GET_PRIV (object);
+ 
+     switch (prop_id)
+         {
+@@ -259,8 +258,7 @@ yelp_transform_set_property (GObject      *object,
+                              const GValue *value,
+                              GParamSpec   *pspec)
+ {
+-    YelpTransformPrivate *priv =
+-        yelp_transform_get_instance_private (YELP_TRANSFORM (object));
++    YelpTransformPrivate *priv = GET_PRIV (object);
+ 
+     switch (prop_id)
+         {
+@@ -289,7 +287,7 @@ yelp_transform_start (YelpTransform       *transform,
+                       xmlDocPtr            auxiliary,
+                       const gchar * const *params)
+ {
+-    YelpTransformPrivate *priv = yelp_transform_get_instance_private (transform);
++    YelpTransformPrivate *priv = GET_PRIV (transform);
+ 
+     priv->input = document;
+     priv->aux = auxiliary;
+@@ -311,7 +309,7 @@ gchar *
+ yelp_transform_take_chunk (YelpTransform *transform,
+                            const gchar   *chunk_id)
+ {
+-    YelpTransformPrivate *priv = yelp_transform_get_instance_private (transform);
++    YelpTransformPrivate *priv = GET_PRIV (transform);
+     gchar *buf;
+ 
+     g_mutex_lock (&priv->mutex);
+@@ -329,7 +327,7 @@ yelp_transform_take_chunk (YelpTransform *transform,
+ void
+ yelp_transform_cancel (YelpTransform *transform)
+ {
+-    YelpTransformPrivate *priv = yelp_transform_get_instance_private (transform);
++    YelpTransformPrivate *priv = GET_PRIV (transform);
+     g_mutex_lock (&priv->mutex);
+     if (priv->running) {
+         priv->cancelled = TRUE;
+@@ -342,7 +340,7 @@ yelp_transform_cancel (YelpTransform *transform)
+ GError *
+ yelp_transform_get_error (YelpTransform *transform)
+ {
+-    YelpTransformPrivate *priv = yelp_transform_get_instance_private (transform);
++    YelpTransformPrivate *priv = GET_PRIV (transform);
+     GError *ret = NULL;
+ 
+     g_mutex_lock (&priv->mutex);
+@@ -358,7 +356,7 @@ yelp_transform_get_error (YelpTransform *transform)
+ static void
+ transform_run (YelpTransform *transform)
+ {
+-    YelpTransformPrivate *priv = yelp_transform_get_instance_private (transform);
++    YelpTransformPrivate *priv = GET_PRIV (transform);
+ 
+     debug_print (DB_FUNCTION, "entering\n");
+ 
+@@ -425,7 +423,7 @@ transform_run (YelpTransform *transform)
+ static gboolean
+ transform_chunk (YelpTransform *transform)
+ {
+-    YelpTransformPrivate *priv = yelp_transform_get_instance_private (transform);
++    YelpTransformPrivate *priv = GET_PRIV (transform);
+     gchar *chunk_id;
+ 
+     debug_print (DB_FUNCTION, "entering\n");
+@@ -447,7 +445,7 @@ transform_chunk (YelpTransform *transform)
+ static gboolean
+ transform_error (YelpTransform *transform)
+ {
+-    YelpTransformPrivate *priv = yelp_transform_get_instance_private (transform);
++    YelpTransformPrivate *priv = GET_PRIV (transform);
+ 
+     debug_print (DB_FUNCTION, "entering\n");
+ 
+@@ -464,7 +462,7 @@ transform_error (YelpTransform *transform)
+ static gboolean
+ transform_final (YelpTransform *transform)
+ {
+-    YelpTransformPrivate *priv = yelp_transform_get_instance_private (transform);
++    YelpTransformPrivate *priv = GET_PRIV (transform);
+ 
+     debug_print (DB_FUNCTION, "entering\n");
+ 
+@@ -507,7 +505,7 @@ xslt_yelp_document (xsltTransformContextPtr ctxt,
+         return;
+ 
+     transform = YELP_TRANSFORM (ctxt->_private);
+-    priv = yelp_transform_get_instance_private (transform);
++    priv = GET_PRIV (transform);
+ 
+     page_id = xsltEvalAttrValueTemplate (ctxt, inst,
+                                          (const xmlChar *) "href",
+@@ -591,7 +589,7 @@ xslt_yelp_aux (xmlXPathParserContextPtr ctxt, int nargs)
+ 
+     tctxt = xsltXPathGetTransformContext (ctxt);
+     transform = YELP_TRANSFORM (tctxt->_private);
+-    priv = yelp_transform_get_instance_private (transform);
++    priv = GET_PRIV (transform);
+ 
+     priv->aux_xslt = xsltNewDocument (tctxt, priv->aux);
+ 
+diff --git a/libyelp/yelp-uri-builder.c b/libyelp/yelp-uri-builder.c
+index 7f1829d..58a53ac 100644
+--- a/libyelp/yelp-uri-builder.c
++++ b/libyelp/yelp-uri-builder.c
+@@ -31,10 +31,6 @@ build_network_uri (const gchar *uri)
+ 
+     soup_uri = soup_uri_new (uri);
+ 
+-    /* Don't mangle URIs for local files */
+-    if (soup_uri->scheme == SOUP_URI_SCHEME_FILE)
+-        return g_strdup (uri);
+-
+     /* Build the URI that will be passed to WebKit. Relative URIs will be
+      * automatically resolved by WebKit, so we need to add a leading slash to
+      * help: and ghelp: URIs to be considered as absolute by WebKit.
+@@ -107,4 +103,4 @@ gchar *
+ build_network_scheme (const gchar *scheme)
+ {
+ 	return g_strdup_printf (BOGUS_PREFIX "%s", scheme);
+-}
++}
+\ No newline at end of file
+diff --git a/libyelp/yelp-uri.c b/libyelp/yelp-uri.c
+index ffc49cc..05a8666 100644
+--- a/libyelp/yelp-uri.c
++++ b/libyelp/yelp-uri.c
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2009-2020 Shaun McCance  <shaunm@gnome.org>
++ * Copyright (C) 2009 Shaun McCance  <shaunm@gnome.org>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -61,6 +61,9 @@ static void           resolve_gfile              (YelpUri        *uri,
+ static gboolean       is_man_path                (const gchar    *uri,
+                                                   const gchar    *encoding);
+ 
++G_DEFINE_TYPE (YelpUri, yelp_uri, G_TYPE_OBJECT)
++#define GET_PRIV(object)(G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_URI, YelpUriPrivate))
++
+ typedef struct _YelpUriPrivate YelpUriPrivate;
+ struct _YelpUriPrivate {
+     GThread              *resolver;
+@@ -89,8 +92,6 @@ enum {
+ };
+ static guint uri_signals[LAST_SIGNAL] = {0,};
+ 
+-G_DEFINE_TYPE_WITH_PRIVATE (YelpUri, yelp_uri, G_TYPE_OBJECT)
+-
+ /******************************************************************************/
+ 
+ static const gchar *mancats[] = {
+@@ -134,12 +135,14 @@ yelp_uri_class_init (YelpUriClass *klass)
+                       0, NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
++
++    g_type_class_add_private (klass, sizeof (YelpUriPrivate));
+ }
+ 
+ static void
+ yelp_uri_init (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+ 
+     priv->query = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+ 
+@@ -149,7 +152,7 @@ yelp_uri_init (YelpUri *uri)
+ static void
+ yelp_uri_dispose (GObject *object)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (YELP_URI (object));
++    YelpUriPrivate *priv = GET_PRIV (object);
+ 
+     if (priv->gfile) {
+         g_object_unref (priv->gfile);
+@@ -172,7 +175,7 @@ yelp_uri_dispose (GObject *object)
+ static void
+ yelp_uri_finalize (GObject *object)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (YELP_URI (object));
++    YelpUriPrivate *priv = GET_PRIV (object);
+ 
+     g_free (priv->docuri);
+     g_free (priv->fulluri);
+@@ -200,10 +203,11 @@ yelp_uri_new_relative (YelpUri *base, const gchar *arg)
+ 
+     uri = (YelpUri *) g_object_new (YELP_TYPE_URI, NULL);
+ 
+-    priv = yelp_uri_get_instance_private (uri);
++    priv = GET_PRIV (uri);
+     priv->doctype = YELP_URI_DOCUMENT_TYPE_UNRESOLVED;
+-    if (base)
++    if (base){
+         priv->res_base = g_object_ref (base);
++        }
+     priv->res_arg = g_strdup (arg);
+ 
+     return uri;
+@@ -219,7 +223,7 @@ yelp_uri_new_search (YelpUri      *base,
+ 
+     uri = (YelpUri *) g_object_new (YELP_TYPE_URI, NULL);
+ 
+-    priv = yelp_uri_get_instance_private (uri);
++    priv = GET_PRIV (uri);
+     priv->doctype = YELP_URI_DOCUMENT_TYPE_UNRESOLVED;
+     if (base)
+         priv->res_base = g_object_ref (base);
+@@ -235,7 +239,7 @@ yelp_uri_new_search (YelpUri      *base,
+ void
+ yelp_uri_resolve (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+ 
+     if (priv->res_base && !yelp_uri_is_resolved (priv->res_base)) {
+         g_signal_connect_swapped (priv->res_base, "resolved",
+@@ -251,7 +255,7 @@ yelp_uri_resolve (YelpUri *uri)
+ void
+ yelp_uri_resolve_sync (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+ 
+     if (priv->doctype != YELP_URI_DOCUMENT_TYPE_UNRESOLVED)
+         return;
+@@ -290,7 +294,7 @@ yelp_uri_resolve_sync (YelpUri *uri)
+ static void
+ resolve_start (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+ 
+     if (priv->resolver == NULL) {
+         g_object_ref (uri);
+@@ -303,14 +307,22 @@ resolve_start (YelpUri *uri)
+ static void
+ resolve_sync (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+ 
+     if (g_str_has_prefix (priv->res_arg, "ghelp:")
+         || g_str_has_prefix (priv->res_arg, "gnome-help:")) {
+         resolve_ghelp_uri (uri);
+     }
+     else if (g_str_has_prefix (priv->res_arg, "help:")) {
+-        resolve_help_uri (uri);
++    //jeong
++        //if (priv->res_base) {
++        //    YelpUriPrivate *base_priv = GET_PRIV (priv->res_base);
++        //    if (base_priv->doctype == YELP_URI_DOCUMENT_TYPE_HTML ||
++        //        base_priv->doctype == YELP_URI_DOCUMENT_TYPE_EXTERNAL)
++        //        resolve_file_path (uri);
++        //}
++        //else
++            resolve_help_uri (uri);
+     }
+     else if (g_str_has_prefix (priv->res_arg, "help-list:")) {
+         resolve_help_list_uri (uri);
+@@ -330,7 +342,7 @@ resolve_sync (YelpUri *uri)
+             priv->tmptype = YELP_URI_DOCUMENT_TYPE_ERROR;
+             return;
+         }
+-        base_priv = yelp_uri_get_instance_private (priv->res_base);
++        base_priv = GET_PRIV (priv->res_base);
+         switch (base_priv->doctype) {
+         case YELP_URI_DOCUMENT_TYPE_UNRESOLVED:
+             break;
+@@ -388,7 +400,7 @@ resolve_async (YelpUri *uri)
+ static gboolean
+ resolve_final (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+ 
+     priv->resolver = NULL;
+ 
+@@ -417,21 +429,21 @@ resolve_final (YelpUri *uri)
+ gboolean
+ yelp_uri_is_resolved (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     return priv->doctype != YELP_URI_DOCUMENT_TYPE_UNRESOLVED;
+ }
+ 
+ YelpUriDocumentType
+ yelp_uri_get_document_type (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     return priv->doctype;
+ }
+ 
+ gchar *
+ yelp_uri_get_document_uri (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     if (priv->doctype == YELP_URI_DOCUMENT_TYPE_UNRESOLVED)
+         return NULL;
+ 
+@@ -449,7 +461,7 @@ yelp_uri_get_document_uri (YelpUri *uri)
+ gchar *
+ yelp_uri_get_canonical_uri (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     if (priv->doctype == YELP_URI_DOCUMENT_TYPE_UNRESOLVED)
+         return NULL;
+     return g_strdup (priv->fulluri);
+@@ -458,7 +470,7 @@ yelp_uri_get_canonical_uri (YelpUri *uri)
+ GFile *
+ yelp_uri_get_file (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     if (priv->doctype == YELP_URI_DOCUMENT_TYPE_UNRESOLVED)
+         return NULL;
+     return priv->gfile ? g_object_ref (priv->gfile) : NULL;
+@@ -467,7 +479,7 @@ yelp_uri_get_file (YelpUri *uri)
+ gchar **
+ yelp_uri_get_search_path (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     if (priv->doctype == YELP_URI_DOCUMENT_TYPE_UNRESOLVED)
+         return NULL;
+     return g_strdupv (priv->search_path);
+@@ -476,7 +488,7 @@ yelp_uri_get_search_path (YelpUri *uri)
+ gchar *
+ yelp_uri_get_page_id (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     if (priv->doctype == YELP_URI_DOCUMENT_TYPE_UNRESOLVED)
+         return NULL;
+     return g_strdup (priv->page_id);
+@@ -485,7 +497,7 @@ yelp_uri_get_page_id (YelpUri *uri)
+ gchar *
+ yelp_uri_get_frag_id (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     if (priv->doctype == YELP_URI_DOCUMENT_TYPE_UNRESOLVED)
+         return NULL;
+     return g_strdup (priv->frag_id);
+@@ -495,7 +507,7 @@ gchar *
+ yelp_uri_get_query (YelpUri      *uri,
+                     const gchar  *key)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     const gchar *ret = g_hash_table_lookup (priv->query, key);
+     if (ret)
+         return g_strdup (ret);
+@@ -509,7 +521,7 @@ gchar *
+ yelp_uri_locate_file_uri (YelpUri     *uri,
+                           const gchar *filename)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     GFile *gfile;
+     gchar *fullpath;
+     gchar *returi = NULL;
+@@ -543,7 +555,7 @@ yelp_uri_locate_file_uri (YelpUri     *uri,
+ static void
+ resolve_file_uri (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     gchar *uristr;
+     const gchar *hash = strchr (priv->res_arg, '#');
+ 
+@@ -563,7 +575,7 @@ static void
+ resolve_file_path (YelpUri *uri)
+ {
+     YelpUriPrivate *base_priv = NULL;
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     gchar *path;
+     const gchar *hash;
+ 
+@@ -575,7 +587,7 @@ resolve_file_path (YelpUri *uri)
+     }
+ 
+     if (priv->res_base)
+-        base_priv = yelp_uri_get_instance_private (priv->res_base);
++        base_priv = GET_PRIV (priv->res_base);
+ 
+     hash = strchr (priv->res_arg, '#');
+     if (hash) {
+@@ -629,7 +641,7 @@ resolve_data_dirs (YelpUri      *ret,
+     const gchar * const *langs = g_get_language_names ();
+     /* The strings are still owned by GLib; we just own the array. */
+     gchar **datadirs;
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (ret);
++    YelpUriPrivate *priv = GET_PRIV (ret);
+     gchar *filename = NULL;
+     gchar **searchpath = NULL;
+     gint searchi, searchmax;
+@@ -692,6 +704,27 @@ resolve_data_dirs (YelpUri      *ret,
+                 }
+                 g_free (filename);
+             }
++//jeong
++            //if (langfirst) {
++            //    filename = g_strdup_printf ("%s/index.html", helpdir);
++            //    if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
++            //        priv->tmptype = YELP_URI_DOCUMENT_TYPE_HTML;
++            //        continue;
++            //    }
++            //    g_free (filename);
++            //}
++            //else {
++            //    filename = g_strdup_printf ("%s/%s.html", helpdir, pageid);
++            //    if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
++            //        priv->tmptype = YELP_URI_DOCUMENT_TYPE_EXTERNAL;
++            //        continue;
++            //    }
++            //    //else {
++            //    //    priv->tmptype = YELP_URI_DOCUMENT_TYPE_EXTERNAL;
++            //    //    continue;
++            //    //}
++            //    g_free (filename);
++            //}
+ 
+             filename = g_strdup_printf ("%s/%s.html", helpdir, pageid);
+             if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
+@@ -717,14 +750,13 @@ resolve_data_dirs (YelpUri      *ret,
+     else {
+         priv->gfile = g_file_new_for_path (filename);
+         priv->search_path = searchpath;
+-        g_free (filename);
+     }
+ }
+ 
+ static void
+ build_ghelp_fulluri (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+ 
+     g_assert (priv->tmptype != YELP_URI_DOCUMENT_TYPE_UNRESOLVED);
+     g_assert (priv->docuri != NULL);
+@@ -743,7 +775,7 @@ resolve_ghelp_uri (YelpUri *uri)
+     /* ghelp:/path/to/file
+      * ghelp:document[/file][?page][#frag]
+      */
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     gchar *document, *slash, *query, *hash;
+     gchar *colon, *c; /* do not free */
+ 
+@@ -846,8 +878,8 @@ resolve_help_uri (YelpUri *uri)
+ {
+     /* help:document[/page][?query][#frag]
+      */
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
+-    gchar *document, *slash, *query, *hash;
++    YelpUriPrivate *priv = GET_PRIV (uri);
++    gchar *document, *slash, *query, *hash, *dot;
+     gchar *colon, *c; /* do not free */
+ 
+     colon = strchr (priv->res_arg, ':');
+@@ -856,7 +888,7 @@ resolve_help_uri (YelpUri *uri)
+         return;
+     }
+ 
+-    slash = query = hash = NULL;
++    dot = slash = query = hash = NULL;
+     for (c = colon; *c != '\0'; c++) {
+         if (*c == '#' && hash == NULL)
+             hash = c;
+@@ -864,6 +896,8 @@ resolve_help_uri (YelpUri *uri)
+             query = c;
+         else if (*c == '/' && slash == NULL && query == NULL && hash == NULL)
+             slash = c;
++        else if (*c == '.')
++            dot = c;
+     }
+ 
+     if (slash || query || hash)
+@@ -877,6 +911,9 @@ resolve_help_uri (YelpUri *uri)
+                            (query ? query : hash) - slash - 1);
+     else if (slash)
+         slash = g_strdup (slash + 1);
++//jeong
++    if (slash && dot)
++        slash = g_strndup (slash, strlen (slash) - strlen (dot));
+ 
+     if (query && hash)
+         query = g_strndup (query + 1,
+@@ -934,7 +971,7 @@ resolve_help_uri (YelpUri *uri)
+ static void
+ resolve_help_list_uri (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     priv->docuri = g_strdup ("help-list:");
+     priv->fulluri = g_strdup (priv->res_arg);
+     priv->page_id = g_strdup ("index");
+@@ -996,7 +1033,7 @@ find_man_path (gchar* name, gchar* section)
+ static void
+ build_man_uris (YelpUri *uri, const char *name, const char *section)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+ 
+     g_assert (priv->tmptype == YELP_URI_DOCUMENT_TYPE_MAN);
+     priv->docuri = g_strdup ("man:");
+@@ -1013,7 +1050,7 @@ build_man_uris (YelpUri *uri, const char *name, const char *section)
+ static void
+ resolve_man_uri (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     /* man:/path/to/file
+      * man:name(section)
+      * man:name.section
+@@ -1101,7 +1138,7 @@ resolve_man_uri (YelpUri *uri)
+ static void
+ build_info_uris (YelpUri *uri, const char *name, const char *section)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+ 
+     g_assert (priv->tmptype == YELP_URI_DOCUMENT_TYPE_INFO);
+     priv->docuri = g_strconcat ("info:", name, NULL);
+@@ -1116,7 +1153,7 @@ build_info_uris (YelpUri *uri, const char *name, const char *section)
+ static void
+ resolve_info_uri (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     /* info:/path/to/file
+      * info:name#node
+      * info:name
+@@ -1249,9 +1286,9 @@ resolve_info_uri (YelpUri *uri)
+ static void
+ resolve_xref_uri (YelpUri *uri)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     const gchar *arg = priv->res_arg + 5;
+-    YelpUriPrivate *base_priv = yelp_uri_get_instance_private (priv->res_base);
++    YelpUriPrivate *base_priv = GET_PRIV (priv->res_base);
+ 
+     priv->tmptype = base_priv->doctype;
+     priv->gfile = g_object_ref (base_priv->gfile);
+@@ -1321,7 +1358,7 @@ resolve_xref_uri (YelpUri *uri)
+ static void
+ resolve_page_and_frag (YelpUri *uri, const gchar *arg)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     gchar *hash;
+ 
+     if (!arg || arg[0] == '\0')
+@@ -1341,7 +1378,7 @@ resolve_page_and_frag (YelpUri *uri, const gchar *arg)
+ static void
+ resolve_gfile (YelpUri *uri, const gchar *query, const gchar *hash)
+ {
+-    YelpUriPrivate *priv = yelp_uri_get_instance_private (uri);
++    YelpUriPrivate *priv = GET_PRIV (uri);
+     GFileInfo *info;
+     GError *error = NULL;
+ 
+diff --git a/libyelp/yelp-view.c b/libyelp/yelp-view.c
+index 019674e..3e36eb0 100644
+--- a/libyelp/yelp-view.c
++++ b/libyelp/yelp-view.c
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2009-2020 Shaun McCance <shaunm@gnome.org>
++ * Copyright (C) 2009 Shaun McCance <shaunm@gnome.org>
+  * Copyright (C) 2014 Igalia S.L.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -141,17 +141,16 @@ enum {
+ };
+ static gint signals[LAST_SIGNAL] = { 0 };
+ 
++G_DEFINE_TYPE (YelpView, yelp_view, WEBKIT_TYPE_WEB_VIEW)
++#define GET_PRIV(object)(G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_VIEW, YelpViewPrivate))
++
+ static WebKitSettings *
+ yelp_view_get_global_settings (void)
+ {
+     static WebKitSettings *websettings = NULL;
+ 
+     if (!websettings)
+-        websettings = webkit_settings_new_with_settings ("default-charset", "utf-8",
+-#if WEBKIT_CHECK_VERSION(2, 23, 4)
+-                                                         "enable-back-forward-navigation-gestures", TRUE,
+-#endif
+-                                                         NULL);
++        websettings = webkit_settings_new_with_settings ("default-charset", "utf-8", NULL);
+ 
+     return websettings;
+ }
+@@ -240,8 +239,6 @@ enum {
+     TARGET_URI_LIST
+ };
+ 
+-G_DEFINE_TYPE_WITH_PRIVATE (YelpView, yelp_view, WEBKIT_TYPE_WEB_VIEW)
+-
+ static void
+ yelp_view_init (YelpView *view)
+ {
+@@ -253,12 +250,14 @@ yelp_view_init (YelpView *view)
+       },
+       {
+         "CopyLink", NULL,
+-        N_("_Copy Link Location"), NULL, NULL,
++        //N_("_Open Link"), NULL, NULL,
++        NULL, NULL, NULL,
+         G_CALLBACK (popup_copy_link)
+       },
+       {
+         "OpenLink", NULL,
+-        N_("_Open Link"), NULL, NULL,
++        //N_("Open Link in New _Window"), NULL, NULL,
++        NULL, NULL, NULL,
+         G_CALLBACK (popup_open_link)
+       },
+       {
+@@ -293,12 +292,13 @@ yelp_view_init (YelpView *view)
+       },
+       {
+         "CopyText", NULL,
+-        N_("_Copy Text"), NULL, NULL,
++        //N_("_Copy Text"), NULL, NULL,
++        NULL, NULL, NULL,
+         G_CALLBACK (popup_copy_clipboard)
+       }
+     };
+ 
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+ 
+     priv->cancellable = NULL;
+ 
+@@ -359,7 +359,7 @@ static void
+ yelp_view_constructed (GObject *object)
+ {
+     YelpView *view = YELP_VIEW (object);
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     YelpSettings *settings = yelp_settings_get_default ();
+ 
+     G_OBJECT_CLASS (yelp_view_parent_class)->constructed (object);
+@@ -379,7 +379,7 @@ yelp_view_constructed (GObject *object)
+ static void
+ yelp_view_dispose (GObject *object)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (YELP_VIEW (object));
++    YelpViewPrivate *priv = GET_PRIV (object);
+ 
+     view_clear_load (YELP_VIEW (object));
+ 
+@@ -430,7 +430,7 @@ yelp_view_dispose (GObject *object)
+ static void
+ yelp_view_finalize (GObject *object)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (YELP_VIEW (object));
++    YelpViewPrivate *priv = GET_PRIV (object);
+ 
+     g_free (priv->popup_link_uri);
+     g_free (priv->popup_link_text);
+@@ -499,6 +499,8 @@ yelp_view_class_init (YelpViewClass *klass)
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
+ 
++    g_type_class_add_private (klass, sizeof (YelpViewPrivate));
++
+     g_object_class_install_property (object_class,
+                                      PROP_URI,
+                                      g_param_spec_object ("yelp-uri",
+@@ -570,7 +572,7 @@ yelp_view_get_property (GObject    *object,
+                         GValue     *value,
+                         GParamSpec *pspec)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (YELP_VIEW (object));
++    YelpViewPrivate *priv = GET_PRIV (object);
+ 
+     switch (prop_id)
+         {
+@@ -611,7 +613,7 @@ yelp_view_set_property (GObject      *object,
+                         GParamSpec   *pspec)
+ {
+     YelpUri *uri;
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (YELP_VIEW (object));
++    YelpViewPrivate *priv = GET_PRIV (object);
+ 
+     switch (prop_id)
+         {
+@@ -652,7 +654,7 @@ void
+ yelp_view_load_uri (YelpView *view,
+                     YelpUri  *uri)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+ 
+     g_object_set (view, "state", YELP_VIEW_STATE_LOADING, NULL);
+ 
+@@ -669,7 +671,7 @@ yelp_view_load_document (YelpView     *view,
+                          YelpDocument *document)
+ {
+     GParamSpec *spec;
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+ 
+     g_return_if_fail (yelp_uri_is_resolved (uri));
+ 
+@@ -692,7 +694,7 @@ yelp_view_load_document (YelpView     *view,
+ YelpDocument *
+ yelp_view_get_document (YelpView *view)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     return priv->document;
+ }
+ 
+@@ -700,7 +702,7 @@ void
+ yelp_view_register_actions (YelpView   *view,
+                             GActionMap *map)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     g_action_map_add_action (map, G_ACTION (priv->print_action));
+     g_action_map_add_action (map, G_ACTION (priv->back_action));
+     g_action_map_add_action (map, G_ACTION (priv->forward_action));
+@@ -714,7 +716,7 @@ static void
+ yelp_view_resolve_uri (YelpView *view,
+                        YelpUri  *uri)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+ 
+     if (yelp_uri_is_resolved (uri)) {
+         uri_resolved (uri, view);
+@@ -755,7 +757,6 @@ document_callback (YelpDocument       *document,
+     }
+ 
+     mime_type = yelp_document_get_mime_type (document, data->page_id);
+-
+     contents = yelp_document_read_contents (document, data->page_id);
+ 
+     content_length = strlen (contents);
+@@ -791,6 +792,7 @@ help_cb_uri_resolved (YelpUri                *uri,
+                                     (YelpDocumentCallback) document_callback,
+                                     data,
+                                     (GDestroyNotify) request_async_data_free);
++
+         g_object_unref (document);
+ 
+     } else {
+@@ -877,7 +879,7 @@ yelp_view_add_link_action (YelpView                *view,
+                            gpointer                 data)
+ {
+     YelpActionEntry *entry;
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+ 
+     entry = g_new0 (YelpActionEntry, 1);
+     entry->action = g_object_ref (action);
+@@ -890,7 +892,7 @@ yelp_view_add_link_action (YelpView                *view,
+ YelpUri *
+ yelp_view_get_active_link_uri (YelpView *view)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     YelpUri *uri;
+ 
+     uri = yelp_uri_new_relative (priv->uri, priv->popup_link_uri);
+@@ -901,7 +903,7 @@ yelp_view_get_active_link_uri (YelpView *view)
+ gchar *
+ yelp_view_get_active_link_text (YelpView *view)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     return g_strdup (priv->popup_link_text);
+ }
+ 
+@@ -989,7 +991,7 @@ view_install_installed (GDBusConnection *connection,
+     }
+     else if (info->uri) {
+         gchar *struri, *docuri;
+-        YelpViewPrivate *priv = yelp_view_get_instance_private (info->view);
++        YelpViewPrivate *priv = GET_PRIV (info->view);
+         docuri = yelp_uri_get_document_uri (priv->uri);
+         if (g_str_equal (docuri, info->uri)) {
+             struri = yelp_uri_get_canonical_uri (priv->uri);
+@@ -1012,7 +1014,7 @@ view_install_uri (YelpView    *view,
+     GVariantBuilder *strv;
+     YelpInstallInfo *info;
+     guint32 xid = 0;
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     GtkWidget *gtkwin;
+     GdkWindow *gdkwin;
+     /* do not free */
+@@ -1126,7 +1128,7 @@ static void
+ popup_open_link (GtkAction   *action,
+                  YelpView    *view)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     YelpUri *uri;
+ 
+     uri = yelp_uri_new_relative (priv->uri, priv->popup_link_uri);
+@@ -1145,7 +1147,7 @@ static void
+ popup_open_link_new (GtkAction   *action,
+                      YelpView    *view)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     YelpUri *uri;
+ 
+     uri = yelp_uri_new_relative (priv->uri, priv->popup_link_uri);
+@@ -1164,7 +1166,7 @@ static void
+ popup_copy_link (GtkAction   *action,
+                  YelpView    *view)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     gtk_clipboard_set_text (gtk_widget_get_clipboard (GTK_WIDGET (view), GDK_SELECTION_CLIPBOARD),
+                             priv->popup_link_uri,
+                             -1);
+@@ -1207,7 +1209,7 @@ popup_save_image (GtkAction   *action,
+     GtkWidget *dialog, *window;
+     gchar *basename;
+     gint res;
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+ 
+     for (window = gtk_widget_get_parent (GTK_WIDGET (view));
+          window && !GTK_IS_WINDOW (window);
+@@ -1262,7 +1264,7 @@ popup_send_image (GtkAction   *action,
+     GAppInfo *app;
+     GAppLaunchContext *context;
+     GError *error = NULL;
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+ 
+     command = g_strdup_printf ("%s %s", nautilus_sendto, priv->popup_image_uri);
+     context = (GAppLaunchContext *) gdk_display_get_app_launch_context (gtk_widget_get_display (GTK_WIDGET (view)));
+@@ -1288,7 +1290,7 @@ static void
+ popup_copy_code (GtkAction   *action,
+                  YelpView    *view)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     GtkClipboard *clipboard;
+ 
+     if (!priv->popup_code_text)
+@@ -1302,7 +1304,7 @@ static void
+ popup_save_code (GtkAction   *action,
+                  YelpView    *view)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     GtkWidget *dialog, *window;
+     gint res;
+ 
+@@ -1387,7 +1389,7 @@ view_populate_context_menu (YelpView            *view,
+                             WebKitHitTestResult *hit_test_result,
+                             gpointer             user_data)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     WebKitContextMenuItem *item;
+     GtkAction *action;
+     GVariant *dom_info_variant;
+@@ -1435,6 +1437,7 @@ view_populate_context_menu (YelpView            *view,
+ 
+             action = gtk_action_group_get_action (priv->popup_actions,
+               "OpenLink");
++            gtk_action_set_label (action, _("_Open Link"));
+             item = webkit_context_menu_item_new (action);
+             webkit_context_menu_append (context_menu, item);
+ 
+@@ -1448,6 +1451,7 @@ view_populate_context_menu (YelpView            *view,
+             else {
+                 action = gtk_action_group_get_action (priv->popup_actions,
+                   "OpenLinkNew");
++                gtk_action_set_label (action, _("Open Link in New _Window"));
+                 item = webkit_context_menu_item_new (action);
+                 webkit_context_menu_append (context_menu, item);
+             }
+@@ -1542,6 +1546,7 @@ view_populate_context_menu (YelpView            *view,
+ 
+         action = gtk_action_group_get_action (priv->popup_actions,
+                                               "CopyText");
++        gtk_action_set_label (action, _("_Copy Text"));
+         item = webkit_context_menu_item_new (action);
+         webkit_context_menu_append (context_menu, item);
+     }
+@@ -1594,7 +1599,7 @@ view_policy_decision_requested (YelpView                *view,
+                                 WebKitPolicyDecisionType type,
+                                 gpointer                 user_data)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     WebKitNavigationAction *action;
+     WebKitURIRequest *request;
+     gchar *fixed_uri;
+@@ -1622,7 +1627,6 @@ view_policy_decision_requested (YelpView                *view,
+     }
+ 
+     webkit_policy_decision_ignore (decision);
+-
+     uri = yelp_uri_new_relative (priv->uri, fixed_uri);
+     yelp_view_load_uri ((YelpView *) view, uri);
+     g_object_unref (uri);
+@@ -1636,7 +1640,7 @@ view_load_status_changed (WebKitWebView   *view,
+                           WebKitLoadEvent  load_event,
+                           gpointer         user_data)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (YELP_VIEW (view));
++    YelpViewPrivate *priv = GET_PRIV (view);
+ 
+     if (priv->state == YELP_VIEW_STATE_ERROR)
+         return;
+@@ -1697,9 +1701,9 @@ view_load_status_changed (WebKitWebView   *view,
+         if (priv->page_title == NULL) {
+             GParamSpec *spec;
+             priv->page_title = g_strdup (webkit_web_view_get_title (view));
+-            spec = g_object_class_find_property ((GObjectClass *) YELP_VIEW_GET_CLASS (view),
+-                                                 "page-title");
+-            g_signal_emit_by_name (view, "notify::page-title", spec);
++            if (priv->page_title != NULL &&  0 < strlen (priv->page_title)) {
++                g_signal_emit_by_name (view, "notify::root-title", NULL);
++            }
+         }
+ 
+         g_signal_emit (view, signals[LOADED], 0);
+@@ -1728,7 +1732,7 @@ view_print_action (GAction *action, GVariant *parameter, YelpView *view)
+     GtkWidget *window;
+     WebKitPrintOperation *print_operation;
+     GtkPrintSettings *settings;
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+ 
+     window = gtk_widget_get_toplevel (GTK_WIDGET (view));
+ 
+@@ -1759,7 +1763,7 @@ view_history_action (GAction   *action,
+ static void
+ view_history_changed (YelpView *view)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     WebKitWebView *web_view = WEBKIT_WEB_VIEW (view);
+ 
+     g_simple_action_set_enabled (priv->back_action, webkit_web_view_can_go_back (web_view));
+@@ -1771,7 +1775,7 @@ view_navigation_action (GAction  *action,
+                         GVariant *parameter,
+                         YelpView *view)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     gchar *page_id, *new_id, *xref;
+     YelpUri *new_uri;
+ 
+@@ -1800,7 +1804,7 @@ view_navigation_action (GAction  *action,
+ static void
+ view_clear_load (YelpView *view)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+ 
+     if (priv->resolve_uri != NULL) {
+         if (priv->uri_resolved != 0) {
+@@ -1857,7 +1861,7 @@ fix_docbook_uri (YelpUri *docbook_uri, YelpDocument* document)
+ static void
+ view_load_page (YelpView *view)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     gchar *uri_str, *tmp_uri;
+ 
+     g_return_if_fail (priv->cancellable == NULL);
+@@ -1945,7 +1949,7 @@ static void
+ view_show_error_page (YelpView *view,
+                       GError   *error)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     YelpSettings *settings = yelp_settings_get_default ();
+     gchar *page, *title = NULL, *title_m, *content_beg, *content_end;
+     gchar *textcolor, *bgcolor, *noteborder, *notebg, *titlecolor, *noteicon, *linkcolor;
+@@ -2098,7 +2102,7 @@ static void
+ uri_resolved (YelpUri  *uri,
+               YelpView *view)
+ {
+-    YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++    YelpViewPrivate *priv = GET_PRIV (view);
+     YelpUriDocumentType doctype;
+     YelpDocument *document;
+     GError *error = NULL;
+@@ -2192,8 +2196,9 @@ uri_resolved (YelpUri  *uri,
+             g_object_unref (priv->document);
+         priv->document = document;
+ 
+-        if (priv->load_page_after_resolved)
++        if (priv->load_page_after_resolved) {
+             view_load_page (view);
++        }
+     } else {
+         if (priv->document != NULL) {
+             g_object_unref (priv->document);
+diff --git a/src/yelp-application.c b/src/yelp-application.c
+index b284757..f4ee0c8 100644
+--- a/src/yelp-application.c
++++ b/src/yelp-application.c
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2010-2020 Shaun McCance <shaunm@gnome.org>
++ * Copyright (C) 2010 Shaun McCance <shaunm@gnome.org>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -27,6 +27,7 @@
+ #include <gio/gio.h>
+ #include <gio/gsettingsbackend.h>
+ #include <glib/gi18n.h>
++#include <glib/gstdio.h>
+ #include <gtk/gtk.h>
+ #ifdef GDK_WINDOWING_X11
+ #include <gdk/gdkx.h>
+@@ -40,7 +41,7 @@
+ #include "yelp-application.h"
+ #include "yelp-window.h"
+ 
+-#define DEFAULT_URI "help:gnome-help"
++#define DEFAULT_URI "help:index"
+ 
+ static gboolean editor_mode = FALSE;
+ 
+@@ -50,8 +51,6 @@ option_version_cb (const gchar *option_name,
+ 	           gpointer     data,
+ 	           GError     **error)
+ {
+-	g_print ("%s %s\n", PACKAGE, VERSION);
+-
+ 	exit (0);
+ }
+ 
+@@ -91,6 +90,8 @@ static void          application_adjust_font           (GAction               *a
+                                                         YelpApplication       *app);
+ static void          application_set_font_sensitivity  (YelpApplication       *app);
+ 
++//static void          yelp_application_ui_init          (YelpApplication       *app);
++
+ static void          bookmarks_changed                 (GSettings             *settings,
+                                                         const gchar           *key,
+                                                         YelpApplication       *app);
+@@ -99,31 +100,70 @@ static gboolean      window_resized                    (YelpWindow            *w
+ 
+ typedef struct _YelpApplicationPrivate YelpApplicationPrivate;
+ struct _YelpApplicationPrivate {
+-    GSList *windows;
+-    GHashTable *windows_by_document;
++    GSList             *windows;
++    GHashTable         *windows_by_document;
++
++    GPropertyAction    *show_cursor_action;
++    GSimpleAction      *larger_text_action;
++    GSimpleAction      *smaller_text_action;
+ 
+-    GPropertyAction  *show_cursor_action;
+-    GSimpleAction    *larger_text_action;
+-    GSimpleAction    *smaller_text_action;
++    GSettingsBackend   *backend;
++    GSettings          *gsettings;
++    GHashTable         *docsettings;
+ 
+-    GSettingsBackend *backend;
+-    GSettings *gsettings;
+-    GHashTable *docsettings;
++    GtkCssProvider     *provider;
++
++    GHashTable *cmd_hash;
+ };
+ 
+ G_DEFINE_TYPE_WITH_CODE (YelpApplication, yelp_application, GTK_TYPE_APPLICATION,
++                         G_ADD_PRIVATE (YelpApplication)
+                          G_IMPLEMENT_INTERFACE (YELP_TYPE_BOOKMARKS,
+-                                                yelp_application_iface_init)
+-                         G_ADD_PRIVATE (YelpApplication) )
++                                                yelp_application_iface_init))
++#define GET_PRIV(object)(G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_APPLICATION, YelpApplicationPrivate))
++
++static void
++yelp_application_gooroom_init (YelpApplication *app)
++{
++    FILE *fp;
++    gchar line[1024], *lineptr;
++    gchar **cmds = NULL;
++
++    YelpApplicationPrivate *priv = GET_PRIV (app);
++
++    priv->cmd_hash = NULL;
++
++    if (!g_file_test (GOOROOM_PATH, G_FILE_TEST_EXISTS))
++        return;
++
++    priv->cmd_hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
++
++    if ((fp = g_fopen (GOOROOM_PATH, "r")) != NULL)
++    {
++        while (fgets (line, sizeof (line), fp) != NULL)
++        {
++            int len = strlen (line);
++            if (len <= 1)
++                break;
++            line [len -1]= '\0';
++            lineptr = line;
++            cmds = g_strsplit (lineptr,",", -1);
++            g_hash_table_insert (priv->cmd_hash, g_strdup(cmds[0]), g_strdup(cmds[1]));
++        }
++        fclose (fp);
++    }
++
++    if (cmds)
++        g_strfreev (cmds);
++}
+ 
+ static void
+ yelp_application_init (YelpApplication *app)
+ {
+-    YelpApplicationPrivate *priv = yelp_application_get_instance_private (app);
++    YelpApplicationPrivate *priv = GET_PRIV (app);
+     priv->docsettings = g_hash_table_new_full (g_str_hash, g_str_equal,
+                                                (GDestroyNotify) g_free,
+                                                (GDestroyNotify) g_object_unref);
+-
+     gtk_application_set_accels_for_action (GTK_APPLICATION (app),
+                                            "app.yelp-application-show-cursor",
+                                            (const gchar*[]) {"F7", NULL});
+@@ -173,6 +213,8 @@ yelp_application_class_init (YelpApplicationClass *klass)
+ 
+     object_class->dispose = yelp_application_dispose;
+     object_class->finalize = yelp_application_finalize;
++
++    //g_type_class_add_private (klass, sizeof (YelpApplicationPrivate));
+ }
+ 
+ static void
+@@ -186,7 +228,7 @@ yelp_application_iface_init (YelpBookmarksInterface *iface)
+ static void
+ yelp_application_dispose (GObject *object)
+ {
+-    YelpApplicationPrivate *priv = yelp_application_get_instance_private (YELP_APPLICATION (object));
++    YelpApplicationPrivate *priv = GET_PRIV (object);
+ 
+     if (priv->show_cursor_action) {
+         g_object_unref (priv->show_cursor_action);
+@@ -208,13 +250,18 @@ yelp_application_dispose (GObject *object)
+         priv->gsettings = NULL;
+     }
+ 
++    if (priv->cmd_hash) {
++        g_hash_table_unref (priv->cmd_hash);
++        priv->cmd_hash = NULL;
++    }
++
+     G_OBJECT_CLASS (yelp_application_parent_class)->dispose (object);
+ }
+ 
+ static void
+ yelp_application_finalize (GObject *object)
+ {
+-    YelpApplicationPrivate *priv = yelp_application_get_instance_private (YELP_APPLICATION (object));
++    YelpApplicationPrivate *priv = GET_PRIV (object);
+ 
+     g_hash_table_destroy (priv->windows_by_document);
+     g_hash_table_destroy (priv->docsettings);
+@@ -231,17 +278,49 @@ yelp_application_cmdline (GApplication     *app,
+     GOptionContext *context;
+     gint argc = g_strv_length (*arguments);
+     gint i;
++    YelpApplication *yelp;
++    YelpApplicationPrivate *priv;
++
++    const gchar * const *langs = g_get_language_names ();
+ 
+     context = g_option_context_new (NULL);
+     g_option_context_add_group (context, gtk_get_option_group (FALSE));
+     g_option_context_add_main_entries (context, entries, GETTEXT_PACKAGE);
+     g_option_context_parse (context, &argc, arguments, NULL);
+ 
++    //gooroom init
++    yelp = YELP_APPLICATION (app);
++    priv = GET_PRIV (app);
++    yelp_application_gooroom_init (yelp);
++
++    gint lang_i;
++    gboolean is_ko = FALSE;
++
++    for (lang_i = 0; langs[lang_i]; lang_i++) {
++        if (g_strcmp0 (langs[lang_i], "ko") == 0) {
++            is_ko = TRUE;
++            break;
++        }
++    }
++
++    if (is_ko && priv->cmd_hash &&
++        0 < g_hash_table_size (priv->cmd_hash)) {
++        for (i = 1; i < argc; i++) {
++            gchar *gr_cmd;
++            gr_cmd = g_hash_table_lookup (priv->cmd_hash, (*arguments)[i]);
++            if (gr_cmd != NULL) {
++                (*arguments)[i] = g_strdup (gr_cmd);
++            }
++        }
++    }
++#if 0
++    // local
+     for (i = 1; i < argc; i++) {
+         if (!strchr ((*arguments)[i], ':') && !((*arguments)[i][0] == '/')) {
+             GFile *base, *new;
+             gchar *cur, *newuri;
+             cur = g_get_current_dir ();
++
+             base = g_file_new_for_path (cur);
+             new = g_file_resolve_relative_path (base, (*arguments)[i]);
+             newuri = g_file_get_uri (new);
+@@ -253,19 +332,42 @@ yelp_application_cmdline (GApplication     *app,
+         }
+     }
+ 
++#endif
+     return G_APPLICATION_CLASS (yelp_application_parent_class)
+         ->local_command_line (app, arguments, exit_status);
+ }
+ 
++//static void
++//yelp_application_ui_init (YelpApplication *application)
++//{
++//    static gboolean initialized = FALSE;
++//    YelpApplicationPrivate *priv = GET_PRIV (application);
++//
++//    if (initialized)
++//        return;
++//
++//    initialized = TRUE;
++//
++//    priv->provider = gtk_css_provider_new ();
++//    gtk_style_context_add_provider_for_screen (gdk_screen_get_default (),
++//                    GTK_STYLE_PROVIDER (priv->provider),
++//                    GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
++//
++//    
++//}
++
+ static void
+ yelp_application_startup (GApplication *application)
+ {
+     YelpApplication *app = YELP_APPLICATION (application);
+-    YelpApplicationPrivate *priv = yelp_application_get_instance_private (app);
++    YelpApplicationPrivate *priv = GET_PRIV (app);
+     gchar *keyfile;
+     YelpSettings *settings;
+ 
+-    g_set_application_name (_("Help"));
++    g_set_application_name (N_("Help"));
++
++    ///* initialize ui */
++    //yelp_application_ui_init (app);
+ 
+     /* chain up */
+     G_APPLICATION_CLASS (yelp_application_parent_class)->startup (application);
+@@ -277,6 +379,7 @@ yelp_application_startup (GApplication *application)
+                                                        g_str_equal,
+                                                        g_free,
+                                                        NULL);
++
+     /* Use a config file for per-document settings, because
+        Ryan asked me to. */
+     keyfile = g_build_filename (g_get_user_config_dir (), "yelp", "yelp.cfg", NULL);
+@@ -321,7 +424,7 @@ application_adjust_font (GAction         *action,
+                          GVariant        *parameter,
+                          YelpApplication *app)
+ {
+-    YelpApplicationPrivate *priv = yelp_application_get_instance_private (app);
++    YelpApplicationPrivate *priv = GET_PRIV (app);
+     gint adjustment = g_settings_get_int (priv->gsettings, "font-adjustment");
+     gint adjust = g_str_equal (g_action_get_name (action), "yelp-application-larger-text") ? 1 : -1;
+ 
+@@ -334,7 +437,7 @@ application_adjust_font (GAction         *action,
+ static void
+ application_set_font_sensitivity (YelpApplication *app)
+ {
+-    YelpApplicationPrivate *priv = yelp_application_get_instance_private (app);
++    YelpApplicationPrivate *priv = GET_PRIV (app);
+     YelpSettings *settings = yelp_settings_get_default ();
+     GParamSpec *spec = g_object_class_find_property ((GObjectClass *) YELP_SETTINGS_GET_CLASS (settings),
+                                                      "font-adjustment");
+@@ -455,7 +558,7 @@ application_uri_resolved (YelpUri             *uri,
+     YelpWindow *window;
+     gchar *doc_uri;
+     GdkWindow *gdk_window;
+-    YelpApplicationPrivate *priv = yelp_application_get_instance_private (data->app);
++    YelpApplicationPrivate *priv = GET_PRIV (data->app);
+     GFile *gfile;
+ 
+     /* We held the application while resolving the URI, so unhold now. */
+@@ -506,7 +609,6 @@ application_uri_resolved (YelpUri             *uri,
+     else {
+         g_free (doc_uri);
+     }
+-
+     yelp_window_load_uri (window, uri);
+ 
+     gtk_widget_show_all (GTK_WIDGET (window));
+@@ -543,7 +645,7 @@ application_window_deleted (YelpWindow      *window,
+                             YelpApplication *app)
+ {
+     gchar *doc_uri; /* owned by windows_by_document */
+-    YelpApplicationPrivate *priv = yelp_application_get_instance_private (app);
++    YelpApplicationPrivate *priv = GET_PRIV (app);
+ 
+     priv->windows = g_slist_remove (priv->windows, window);
+     doc_uri = g_object_get_data (G_OBJECT (window), "doc_uri");
+@@ -556,7 +658,7 @@ application_window_deleted (YelpWindow      *window,
+ GSettings *
+ application_get_doc_settings (YelpApplication *app, const gchar *doc_uri)
+ {
+-    YelpApplicationPrivate *priv = yelp_application_get_instance_private (app);
++    YelpApplicationPrivate *priv = GET_PRIV (app);
+     GSettings *settings = g_hash_table_lookup (priv->docsettings, doc_uri);
+     if (settings == NULL) {
+         gchar *tmp, *key, *settings_path;
+@@ -754,7 +856,7 @@ static gboolean
+ window_resized (YelpWindow        *window,
+                 YelpApplication   *app)
+ {
+-    YelpApplicationPrivate *priv = yelp_application_get_instance_private (app);
++    YelpApplicationPrivate *priv = GET_PRIV (app);
+     YelpUri *uri;
+     gchar *doc_uri;
+     GSettings *settings;
+diff --git a/src/yelp-window.c b/src/yelp-window.c
+index a648b6e..f754050 100644
+--- a/src/yelp-window.c
++++ b/src/yelp-window.c
+@@ -1,6 +1,6 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /*
+- * Copyright (C) 2010-2020 Shaun McCance <shaunm@gnome.org>
++ * Copyright (C) 2010 Shaun McCance <shaunm@gnome.org>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -34,9 +34,16 @@
+ #include "yelp-uri.h"
+ #include "yelp-view.h"
+ 
++#include "yelp-help-list.h"
++
+ #include "yelp-application.h"
+ #include "yelp-window.h"
+ 
++typedef enum {
++    CURSOR_DEFAULT = 0,
++    CURSOR_POINTER,
++}CursorTypeEnum;
++
+ static void          yelp_window_dispose          (GObject            *object);
+ static void          yelp_window_finalize         (GObject            *object);
+ static void          yelp_window_get_property     (GObject            *object,
+@@ -48,6 +55,12 @@ static void          yelp_window_set_property     (GObject            *object,
+                                                    const GValue       *value,
+                                                    GParamSpec         *pspec);
+ 
++static void          window_set_toc_list               (YelpWindow *window);
++static void          yelp_window_toc_items_free         (TocItem *item);
++static gboolean      change_label_css                   (GtkWidget      *label,
++                                                         GtkCssProvider *css);
++static void          change_selection                   (gchar *id, YelpWindow *window);
++
+ static void          window_construct             (YelpWindow         *window);
+ 
+ static gboolean      window_map_event             (YelpWindow         *window,
+@@ -69,6 +82,15 @@ static gboolean      window_key_press             (YelpWindow         *window,
+                                                    GdkEventKey        *event,
+                                                    gpointer            userdata);
+ 
++static gboolean      set_cursor                   (YelpWindow         *window,
++                                                   CursorTypeEnum     type);
++static gboolean      enter_side_button            (GtkButton          *button,
++                                                   GdkEvent           *event,
++                                                   gpointer            data);
++static gboolean      leave_side_button            (GtkButton          *button,
++                                                   GdkEvent           *event,
++                                                   gpointer            data);
++
+ static void          bookmark_activated           (GtkListBox         *box,
+                                                    GtkListBoxRow      *row,
+                                                    YelpWindow         *window);
+@@ -83,9 +105,9 @@ static void          app_bookmarks_changed        (YelpApplication    *app,
+ static void          window_set_bookmarks         (YelpWindow         *window,
+                                                    const gchar        *doc_uri);
+ static void          window_set_bookmark_buttons  (YelpWindow         *window);
+-static void          window_search_mode           (GtkSearchBar       *search_bar,
+-                                                   GParamSpec         *pspec,
+-                                                   YelpWindow         *window);
++//static void          window_search_mode           (GtkSearchBar       *search_bar,
++//                                                   GParamSpec         *pspec,
++//                                                   YelpWindow         *window);
+ 
+ static void          action_new_window            (GSimpleAction      *action,
+                                                    GVariant           *parameter,
+@@ -161,7 +183,6 @@ struct _YelpWindowPrivate {
+     GtkWidget *header;
+     GtkWidget *vbox_view;
+     GtkWidget *vbox_full;
+-    GtkWidget *search_bar;
+     GtkWidget *search_entry;
+     GtkWidget *find_bar;
+     GtkWidget *find_entry;
+@@ -170,7 +191,22 @@ struct _YelpWindowPrivate {
+     GtkWidget *bookmark_list;
+     GtkWidget *bookmark_add;
+     GtkWidget *bookmark_remove;
+-    YelpView *view;
++    YelpView  *view;
++
++    GtkWidget *hbox_main;
++    GtkWidget *vbox_side;
++    GtkWidget *scrolled_wnd;
++    GtkWidget *bbox_toc;
++
++    GtkWidget   *vbox_content;
++    GtkWidget   *stack;
++    GList       *toc_items;
++    GdkCursor   *default_cursor;
++    GdkCursor   *pointer_cursor;
++
++    GtkCssProvider *css;
++    GtkCssProvider *highlight_css;
++    GtkCssProvider *default_css;
+ 
+     GtkWidget *ctrll_entry;
+ 
+@@ -186,6 +222,7 @@ struct _YelpWindowPrivate {
+ };
+ 
+ G_DEFINE_TYPE_WITH_PRIVATE (YelpWindow, yelp_window, GTK_TYPE_APPLICATION_WINDOW)
++#define GET_PRIV(object)(G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_WINDOW, YelpWindowPrivate))
+ 
+ static void
+ yelp_window_init (YelpWindow *window)
+@@ -221,12 +258,14 @@ yelp_window_class_init (YelpWindowClass *klass)
+                       0, NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
++
++    //g_type_class_add_private (klass, sizeof (YelpWindowPrivate));
+ }
+ 
+ static void
+ yelp_window_dispose (GObject *object)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (YELP_WINDOW (object));
++    YelpWindowPrivate *priv = GET_PRIV (object);
+ 
+     if (priv->bookmarks_changed) {
+         g_signal_handler_disconnect (priv->application, priv->bookmarks_changed);
+@@ -238,14 +277,24 @@ yelp_window_dispose (GObject *object)
+         priv->ctrll_entry = NULL;
+     }
+ 
++    g_clear_object (&priv->default_cursor);
++    g_clear_object (&priv->pointer_cursor);
++
+     G_OBJECT_CLASS (yelp_window_parent_class)->dispose (object);
+ }
+ 
+ static void
+ yelp_window_finalize (GObject *object)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (YELP_WINDOW (object));
++    YelpWindowPrivate *priv = GET_PRIV (object);
++
+     g_free (priv->doc_uri);
++    g_list_free_full (priv->toc_items, (GDestroyNotify) yelp_window_toc_items_free);
++
++    g_object_unref (priv->css);
++    g_object_unref (priv->highlight_css);
++    g_object_unref (priv->default_css);
++
+     G_OBJECT_CLASS (yelp_window_parent_class)->finalize (object);
+ }
+ 
+@@ -255,7 +304,7 @@ yelp_window_get_property (GObject    *object,
+                           GValue     *value,
+                           GParamSpec *pspec)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (YELP_WINDOW (object));
++    YelpWindowPrivate *priv = GET_PRIV (object);
+     switch (prop_id) {
+     case PROP_APPLICATION:
+         g_value_set_object (value, priv->application);
+@@ -272,11 +321,12 @@ yelp_window_set_property (GObject     *object,
+                           const GValue *value,
+                           GParamSpec   *pspec)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (YELP_WINDOW (object));
++    YelpWindowPrivate *priv = GET_PRIV (object);
+     switch (prop_id) {
+     case PROP_APPLICATION:
+         priv->application = g_value_get_object (value);
+         window_construct ((YelpWindow *) object);
++        //window_set_toc ((YelpWindow *) object);
+         break;
+     default:
+         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+@@ -284,16 +334,175 @@ yelp_window_set_property (GObject     *object,
+     }
+ }
+ 
++static gboolean
++change_label_css (GtkWidget      *label,
++                  GtkCssProvider *css)
++{
++     if (css == NULL)
++        return FALSE;
++
++    gtk_style_context_add_provider (gtk_widget_get_style_context (label),
++        GTK_STYLE_PROVIDER (css),
++        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
++
++    return TRUE;
++}
++
++static void
++change_selection (gchar *id, YelpWindow *window)
++{
++    YelpWindowPrivate *priv = GET_PRIV (window);
++    GtkAdjustment *adj = NULL;
++    GtkListBoxRow *row = NULL;
++
++    for (GList *l = g_list_first (priv->toc_items); l != NULL; l = l->next) {
++        TocItem *item = (TocItem*)l->data;
++
++        if (!g_strcmp0 (id, item->id)) {
++            item->checked = TRUE;
++            gtk_list_box_select_row (GTK_LIST_BOX(priv->bbox_toc), GTK_LIST_BOX_ROW (item->row));
++            change_label_css (item->label, priv->highlight_css);
++        }
++        else {
++            if (!item->checked)
++                continue;
++
++            item->checked = FALSE;
++            gtk_list_box_unselect_row (GTK_LIST_BOX(priv->bbox_toc), GTK_LIST_BOX_ROW (item->row));
++            change_label_css (item->label, priv->default_css);
++        }
++    }
++
++    /* scolled to selected row */
++    row = gtk_list_box_get_selected_row (GTK_LIST_BOX (priv->bbox_toc));
++    if (row != NULL) {
++        gint y;
++        gtk_widget_translate_coordinates (GTK_WIDGET (row), priv->bbox_toc, 0, 0, NULL, &y);
++        {
++//            gint height;
++            adj = gtk_list_box_get_adjustment (GTK_LIST_BOX (priv->bbox_toc));
++//            gtk_widget_get_preferred_height (GTK_WIDGET (row), NULL, &height);
++//            height = gtk_widget_get_allocated_height (GTK_WIDGET (row));
++            gtk_adjustment_set_value (adj, y);
++        }
++    }
++}
++
++static void
++yelp_window_clicked_toc (GtkButton *button, gpointer data)
++{
++    TocItem *sel_item = (TocItem*)data;
++    YelpWindow *window = sel_item->window;
++    YelpWindowPrivate *priv = GET_PRIV (window);
++
++    change_selection (sel_item->id, window);
++    
++    yelp_view_load (priv->view, sel_item->id);
++}
++
++static void
++yelp_window_toc_items_free (TocItem *item)
++{
++    g_free (item->title);
++    g_free (item->id);
++    g_free (item);
++}
++
++static void
++window_set_toc_list (YelpWindow *window)
++{
++    YelpWindowPrivate *priv = GET_PRIV (window);
++    YelpUri *uri = yelp_uri_new ("help-list:");
++    YelpDocument *document = NULL;
++    GList *entries = NULL;
++    GList *cur = NULL;
++
++    document = yelp_help_list_new (uri);
++    help_list_entries_init ((YelpHelpList *)document);
++    entries = help_list_get_all_entries (document);
++
++    /* hover & check css for label */
++      priv->highlight_css = gtk_css_provider_new ();
++      gtk_css_provider_load_from_data (priv->highlight_css,
++".vbox-side-button-label {"
++"   font-family: NotoSansCJKkr;"
++"   font-size: 13px;"
++"   font-weight: normal;"
++"   font-style: normal;"
++"   color: #1b6ed0;"
++"}"
++, -1, NULL);
++
++      priv->default_css = gtk_css_provider_new ();
++      gtk_css_provider_load_from_data (priv->default_css,
++".vbox-side-button-label {"
++"   font-family: NotoSansCJKkr;"
++"   font-size: 13px;"
++"   font-weight: normal;"
++"   font-style: normal;"
++"   color: #000000;"
++"}"
++, -1, NULL);
++
++    /*  */
++    for (cur = entries; cur != NULL; cur = cur->next) {
++        HelpListEntry *entry = (HelpListEntry *) cur->data;
++        gchar *title         = entry->title ? g_strdup (entry->title) : (strchr (entry->id, ':') + 1);
++        TocItem *item        = g_new0 (TocItem, 1);
++        GtkWidget *button    = gtk_toggle_button_new ();
++        GtkWidget *label     = gtk_label_new (title);
++        GtkWidget *row       = gtk_list_box_row_new ();
++
++        /* set style class name */
++        gtk_style_context_add_class (gtk_widget_get_style_context (button),
++                                     "vbox-side-button");
++        gtk_style_context_add_class (gtk_widget_get_style_context (label),
++                                     "vbox-side-button-label");
++        gtk_style_context_add_class (gtk_widget_get_style_context (row),
++                                     "toc-list-row");
++
++        /* set label property*/
++        gtk_label_set_line_wrap (GTK_LABEL (label), TRUE);
++        gtk_widget_set_halign (label, GTK_ALIGN_START);
++        //gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
++
++        /* layout */
++        gtk_container_add (GTK_CONTAINER (button), label);
++        gtk_container_add (GTK_CONTAINER (row), button);
++        gtk_list_box_prepend (GTK_LIST_BOX (priv->bbox_toc), row);
++
++        /* set toc item */
++        item->title = g_strdup (title);
++        item->id = g_strdup (entry->id);
++        item->window = window;
++        item->button = button;
++        item->row    = row;
++        item->label = label;
++        item->checked = FALSE;
++
++        /* add in toc item list */
++        priv->toc_items = g_list_prepend (priv->toc_items, item);
++
++        g_signal_connect (button, "clicked", G_CALLBACK (yelp_window_clicked_toc), item);
++        g_signal_connect (button, "enter-notify-event", G_CALLBACK (enter_side_button), item);
++        g_signal_connect (button, "leave-notify-event", G_CALLBACK (leave_side_button), item);
++    }
++
++    g_object_unref (uri);
++}
++
+ static void
+ window_construct (YelpWindow *window)
+ {
+     GtkWidget *box, *button;
+     GtkWidget *frame;
+-    GtkCssProvider *css;
+     GtkSizeGroup *size_group;
+     GMenu *menu, *section;
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     GtkStyleContext *headerbar_context;
++    /* For Cursor */
++    GdkScreen *screen = NULL;
++    GdkDisplay *display = NULL;
+ 
+     const GActionEntry entries[] = {
+         { "yelp-window-new",    action_new_window,   NULL, NULL, NULL },
+@@ -304,6 +513,51 @@ window_construct (YelpWindow *window)
+         { "yelp-window-ctrll",  action_ctrll,        NULL, NULL, NULL },
+     };
+ 
++    /* CSS Provider */
++    priv->css = gtk_css_provider_new ();
++    gtk_css_provider_load_from_data (priv->css,
++".yelp-find-frame {"
++"   background-color: @theme_base_color;"
++"   padding: 6px;"
++"   border-color: @borders;"
++"   border-radius: 0 0 3px 3px;"
++"   border-width: 0 1px 1px 1px;"
++"   border-style: solid;"
++"}"
++".bbox-toc {"
++"	background-color: rgba(0,0,0,0.0);"
++"}"
++".toc-list-row {"
++"   padding-top: 5px;"
++"   padding-bottom: 5px;"
++"	background-color: rgba(0,0,0,0.0);"
++"}"
++".toc-list-row:activate {"
++"	background-color: rgba(201,201,201,0.0);"
++"}"
++".vbox-side {"
++"	background-color: rgba(0,0,0,0.0);"
++"}"
++".vbox-side-button {"
++"	background-color: rgba(201,201,201,0.0);"
++"   border: none;"
++"   border-radius: 6px;"
++"}"
++".vbox-side-button:hover {"
++"	color: rgba(27,110,208,0.6);"
++"}"
++".vbox-side-button-label {"
++"   font-family: NotoSansCJKkr;"
++"   font-size: 13px;"
++"   font-weight: normal;"
++"   font-style: normal;"
++"   color: #000000;"
++"}"
++,-1, NULL);
++    gtk_style_context_add_provider_for_screen (gdk_screen_get_default (),
++                                    GTK_STYLE_PROVIDER (priv->css),
++                                    GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
++
+     gtk_window_set_icon_name (GTK_WINDOW (window), "org.gnome.Yelp");
+ 
+     g_object_get (gtk_settings_get_default (),
+@@ -356,7 +610,7 @@ window_construct (YelpWindow *window)
+     gtk_widget_set_valign (button, GTK_ALIGN_CENTER);
+     gtk_style_context_add_class (gtk_widget_get_style_context (button), "image-button");
+     gtk_widget_set_tooltip_text (button, _("Menu"));
+-    gtk_header_bar_pack_end (GTK_HEADER_BAR (priv->header), button);
++//    gtk_header_bar_pack_end (GTK_HEADER_BAR (priv->header), button);
+ 
+     menu = g_menu_new ();
+     section = g_menu_new ();
+@@ -385,32 +639,61 @@ window_construct (YelpWindow *window)
+ 
+     gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (button), G_MENU_MODEL (menu));
+ 
+-    /** Search **/
+-    priv->vbox_view = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+-    gtk_box_pack_start (GTK_BOX (priv->vbox_full), priv->vbox_view, TRUE, TRUE, 0);
++    /** Frame **/
++    priv->hbox_main = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
++    gtk_box_pack_start (GTK_BOX (priv->vbox_full), priv->hbox_main, TRUE, TRUE, 0);
+ 
+-    priv->search_bar = gtk_search_bar_new ();
+-    gtk_box_pack_start (GTK_BOX (priv->vbox_view), priv->search_bar, FALSE, FALSE, 0);
++    priv->vbox_side = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
++    gtk_style_context_add_class (gtk_widget_get_style_context (priv->vbox_side),
++                                 "vbox-side");
++    gtk_widget_set_size_request (priv->vbox_side, 215, -1);
++
++    gtk_box_pack_start (GTK_BOX (priv->hbox_main), priv->vbox_side, FALSE, FALSE, 0);
++
++    /** Search **/
+     priv->search_entry = yelp_search_entry_new (priv->view,
+                                                 YELP_BOOKMARKS (priv->application));
+-    gtk_entry_set_width_chars (GTK_ENTRY (priv->search_entry), 50);
+-    gtk_container_add (GTK_CONTAINER (priv->search_bar), priv->search_entry);
++
++    gtk_entry_set_width_chars (GTK_ENTRY (priv->search_entry), 20);
++
++
++    //gtk_box_pack_start (GTK_BOX (priv->vbox_side), priv->search_entry, FALSE, TRUE, 15);
++
+     button = gtk_toggle_button_new ();
+     gtk_widget_set_valign (button, GTK_ALIGN_CENTER);
+     gtk_style_context_add_class (gtk_widget_get_style_context (button), "image-button");
+     gtk_button_set_image (GTK_BUTTON (button),
+                           gtk_image_new_from_icon_name ("edit-find-symbolic",
+                                                         GTK_ICON_SIZE_MENU));
+-    gtk_widget_set_tooltip_text (button, _("Search (Ctrl+S)"));
+-    g_object_bind_property (button, "active",
+-                            priv->search_bar, "search-mode-enabled",
+-                            G_BINDING_BIDIRECTIONAL);
+-    g_signal_connect (priv->search_bar, "notify::search-mode-enabled",
+-                      G_CALLBACK (window_search_mode), window);
+-    gtk_header_bar_pack_end (GTK_HEADER_BAR (priv->header), button);
+-
+     g_signal_connect (window, "key-press-event", G_CALLBACK (window_key_press), NULL);
+ 
++    /* Side box scrolled window */
++    priv->scrolled_wnd = gtk_scrolled_window_new (NULL, NULL);
++    gtk_box_pack_end (GTK_BOX (priv->vbox_side), priv->scrolled_wnd, TRUE, TRUE, 0);
++
++//    priv->bbox_toc = gtk_box_new (GTK_ORIENTATION_VERTICAL, 15);
++//    gtk_widget_set_margin_start (priv->bbox_toc, 10);
++//    gtk_widget_set_margin_end (priv->bbox_toc, 15);
++//    gtk_widget_set_margin_top (priv->bbox_toc, 20);
++//    gtk_widget_set_margin_bottom (priv->bbox_toc, 20);
++//    gtk_container_add (GTK_CONTAINER (priv->scrolled_wnd), GTK_WIDGET (priv->bbox_toc));
++    priv->bbox_toc = gtk_list_box_new ();
++
++
++    gtk_style_context_add_class (gtk_widget_get_style_context (priv->bbox_toc),
++                                 "bbox-toc");
++
++    gtk_widget_set_margin_start (priv->bbox_toc, 10);
++    gtk_widget_set_margin_end (priv->bbox_toc, 15);
++    gtk_widget_set_margin_top (priv->bbox_toc, 10);
++    gtk_widget_set_margin_bottom (priv->bbox_toc, 10);
++    gtk_container_add (GTK_CONTAINER (priv->scrolled_wnd), GTK_WIDGET (priv->bbox_toc));
++
++    /* Table of contents */
++    priv->vbox_view = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
++    gtk_box_pack_end (GTK_BOX (priv->hbox_main), priv->vbox_view, TRUE, TRUE, 0);
++    window_set_toc_list ((YelpWindow *) window);
++
+     /** Bookmarks **/
+     button = gtk_menu_button_new ();
+     gtk_widget_set_valign (button, GTK_ALIGN_CENTER);
+@@ -419,7 +702,7 @@ window_construct (YelpWindow *window)
+                           gtk_image_new_from_icon_name ("user-bookmarks-symbolic",
+                                                         GTK_ICON_SIZE_MENU));
+     gtk_widget_set_tooltip_text (button, _("Bookmarks"));
+-    gtk_header_bar_pack_end (GTK_HEADER_BAR (priv->header), button);
++//    gtk_header_bar_pack_end (GTK_HEADER_BAR (priv->header), button);
+ 
+     priv->bookmark_menu = gtk_popover_new (button);
+     g_object_set (priv->bookmark_menu, "border-width", 12, NULL);
+@@ -427,6 +710,7 @@ window_construct (YelpWindow *window)
+ 
+     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 12);
+     gtk_container_add (GTK_CONTAINER (priv->bookmark_menu), box);
++    gtk_widget_hide (priv->bookmark_menu);
+     priv->bookmark_sw = gtk_scrolled_window_new (NULL, NULL);
+     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (priv->bookmark_sw),
+                                     GTK_POLICY_NEVER,
+@@ -460,26 +744,13 @@ window_construct (YelpWindow *window)
+                           G_CALLBACK (app_bookmarks_changed), window);
+ 
+     /** Find **/
+-    css = gtk_css_provider_new ();
++    //css = gtk_css_provider_new ();
+     /* FIXME: Connect to parsing-error signal. */
+-    gtk_css_provider_load_from_data (css,
+-                                     ".yelp-find-frame {"
+-                                     "    background-color: @theme_base_color;"
+-                                     "    padding: 6px;"
+-                                     "    border-color: @borders;"
+-                                     "    border-radius: 0 0 3px 3px;"
+-                                     "    border-width: 0 1px 1px 1px;"
+-                                     "    border-style: solid;"
+-                                     "}",
+-                                     -1, NULL);
+     priv->find_bar = gtk_revealer_new ();
+     frame = gtk_frame_new (NULL);
+     gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_NONE);
+     gtk_style_context_add_class (gtk_widget_get_style_context (frame),
+                                  "yelp-find-frame");
+-    gtk_style_context_add_provider (gtk_widget_get_style_context (frame),
+-                                    GTK_STYLE_PROVIDER (css),
+-                                    GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+     box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+     g_object_set (priv->find_bar,
+                   "halign", GTK_ALIGN_END,
+@@ -490,8 +761,6 @@ window_construct (YelpWindow *window)
+     gtk_container_add (GTK_CONTAINER (frame), box);
+     gtk_container_add (GTK_CONTAINER (priv->find_bar), frame);
+ 
+-    g_object_unref (css);
+-
+     size_group = gtk_size_group_new (GTK_SIZE_GROUP_VERTICAL);
+ 
+     priv->find_entry = gtk_search_entry_new ();
+@@ -522,9 +791,14 @@ window_construct (YelpWindow *window)
+     /** View **/
+     box = gtk_overlay_new ();
+     gtk_overlay_add_overlay (GTK_OVERLAY (box), GTK_WIDGET (priv->find_bar));
++//    gtk_widget_set_margin_start (box, 15);
++//    gtk_widget_set_margin_end (box, 30);
++//    gtk_widget_set_margin_top (box, 20);
++//    gtk_widget_set_margin_bottom (box, 20);
+ 
+     gtk_container_add (GTK_CONTAINER (box), GTK_WIDGET (priv->view));
+     gtk_box_pack_start (GTK_BOX (priv->vbox_view), box, TRUE, TRUE, 0);
++    //gtk_box_pack_start (GTK_BOX (priv->vbox_view), GTK_WIDGET (priv->view), TRUE, TRUE, 0);
+ 
+     g_signal_connect (priv->view, "new-view-requested", G_CALLBACK (view_new_window), window);
+     g_signal_connect (priv->view, "loaded", G_CALLBACK (view_loaded), window);
+@@ -543,6 +817,13 @@ window_construct (YelpWindow *window)
+     gtk_drag_dest_add_uri_targets (GTK_WIDGET (window));
+     g_signal_connect (window, "drag-data-received",
+                       G_CALLBACK (window_drag_received), NULL);
++
++    /* Cursor */
++    screen = gtk_widget_get_screen (GTK_WIDGET (window));
++    display = gdk_screen_get_display (screen);
++    priv->default_cursor = gdk_cursor_new_from_name (display, "default");
++    priv->pointer_cursor = gdk_cursor_new_from_name (display, "pointer");
++
+ }
+ 
+ /******************************************************************************/
+@@ -561,8 +842,7 @@ void
+ yelp_window_load_uri (YelpWindow  *window,
+                       YelpUri     *uri)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
+-
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     yelp_view_load_uri (priv->view, uri);
+ }
+ 
+@@ -570,7 +850,7 @@ YelpUri *
+ yelp_window_get_uri (YelpWindow *window)
+ {
+     YelpUri *uri;
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     g_object_get (G_OBJECT (priv->view), "yelp-uri", &uri, NULL);
+     return uri;
+ }
+@@ -580,7 +860,7 @@ yelp_window_get_geometry (YelpWindow  *window,
+                           gint        *width,
+                           gint        *height)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     *width = priv->width;
+     *height = priv->height;
+ }
+@@ -595,7 +875,7 @@ action_new_window (GSimpleAction *action,
+     YelpUri *yuri;
+     gchar *uri = NULL;
+     YelpWindow *window = YELP_WINDOW (userdata);
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+ 
+     g_object_get (priv->view, "yelp-uri", &yuri, NULL);
+     uri = yelp_uri_get_document_uri (yuri);
+@@ -619,10 +899,10 @@ action_search (GSimpleAction *action,
+                GVariant      *parameter,
+                gpointer       userdata)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (userdata);
++    YelpWindowPrivate *priv = GET_PRIV (userdata);
+ 
+     gtk_revealer_set_reveal_child (GTK_REVEALER (priv->find_bar), FALSE);
+-    gtk_search_bar_set_search_mode (GTK_SEARCH_BAR (priv->search_bar), TRUE);
++    //gtk_search_bar_set_search_mode (GTK_SEARCH_BAR (priv->search_bar), TRUE);
+     gtk_widget_grab_focus (priv->search_entry);
+ }
+ 
+@@ -631,9 +911,9 @@ action_find (GSimpleAction *action,
+              GVariant      *parameter,
+              gpointer       userdata)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (userdata);
++    YelpWindowPrivate *priv = GET_PRIV (userdata);
+ 
+-    gtk_search_bar_set_search_mode (GTK_SEARCH_BAR (priv->search_bar), FALSE);
++    //gtk_search_bar_set_search_mode (GTK_SEARCH_BAR (priv->search_bar), FALSE);
+     gtk_revealer_set_reveal_child (GTK_REVEALER (priv->find_bar), TRUE);
+     gtk_widget_grab_focus (priv->find_entry);
+ }
+@@ -643,7 +923,7 @@ action_go_all (GSimpleAction *action,
+                GVariant      *parameter,
+                gpointer       userdata)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (userdata);
++    YelpWindowPrivate *priv = GET_PRIV (userdata);
+     yelp_view_load (priv->view, "help-list:");
+ }
+ 
+@@ -652,7 +932,7 @@ action_ctrll (GSimpleAction *action,
+               GVariant      *parameter,
+               gpointer       userdata)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (userdata);
++    YelpWindowPrivate *priv = GET_PRIV (userdata);
+     YelpUri *yuri;
+     gchar *uri = NULL;
+ 
+@@ -670,7 +950,9 @@ action_ctrll (GSimpleAction *action,
+ 
+     gtk_entry_set_text (GTK_ENTRY (priv->ctrll_entry), "");
+ 
+-    gtk_header_bar_set_custom_title (GTK_HEADER_BAR (priv->header), priv->ctrll_entry);
++    //gtk_header_bar_set_custom_title (GTK_HEADER_BAR (priv->header), priv->ctrll_entry);
++    gtk_header_bar_set_title (GTK_HEADER_BAR (priv->header), "ggguide");
++    gtk_widget_set_halign (priv->header, GTK_ALIGN_START);
+     gtk_widget_show (priv->ctrll_entry);
+     gtk_widget_grab_focus (priv->ctrll_entry);
+ 
+@@ -720,7 +1002,7 @@ window_map_event (YelpWindow  *window,
+                   GdkEvent    *event,
+                   gpointer     user_data)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     priv->configured = TRUE;
+     return FALSE;
+ }
+@@ -730,7 +1012,7 @@ window_configure_event (YelpWindow         *window,
+                         GdkEventConfigure  *event,
+                         gpointer            user_data)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     gboolean skip = TRUE;
+     if (priv->width != event->width) {
+         skip = FALSE;
+@@ -759,7 +1041,7 @@ window_configure_event (YelpWindow         *window,
+ static gboolean
+ window_resize_signal (YelpWindow *window)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     g_signal_emit (window, signals[RESIZE_EVENT], 0);
+     priv->resize_signal = 0;
+     return FALSE;
+@@ -770,16 +1052,78 @@ window_key_press (YelpWindow  *window,
+                   GdkEventKey *event,
+                   gpointer     userdata)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+ 
+     if (gtk_revealer_get_reveal_child (GTK_REVEALER (priv->find_bar)))
+         return FALSE;
+ 
+     if (gtk_header_bar_get_custom_title (GTK_HEADER_BAR (priv->header)))
+         return FALSE;
++return FALSE;
++//    return gtk_search_bar_handle_event (GTK_SEARCH_BAR (priv->search_bar),
++//                                        (GdkEvent *) event);
++}
++
++static gboolean
++set_cursor (YelpWindow *window, CursorTypeEnum type)
++{
++    GdkCursor *cursor = NULL;
++    YelpWindowPrivate *priv = GET_PRIV (window);
++
++    switch (type) {
++        case CURSOR_DEFAULT:
++            cursor = priv->default_cursor;
++        break;
++        case CURSOR_POINTER:
++            cursor = priv->pointer_cursor;
++        break;
++        default:
++            return TRUE;
++        break;
++    }
++    gdk_window_set_cursor (gtk_widget_get_window (GTK_WIDGET (window)), cursor);
++
++    return FALSE;
++}
++
++static gboolean
++enter_side_button (GtkButton *button,
++                   GdkEvent *event,
++                   gpointer data)
++{
++    TocItem *item = (TocItem*)data;
++    YelpWindowPrivate *priv = GET_PRIV (item->window);
++
++    if (item->checked)
++        goto bail;
++
++    if (!change_label_css (item->label, priv->highlight_css))
++        return FALSE;
+ 
+-    return gtk_search_bar_handle_event (GTK_SEARCH_BAR (priv->search_bar),
+-                                        (GdkEvent *) event);
++bail:
++    return set_cursor ((YelpWindow *)item->window, CURSOR_POINTER);
++}
++
++static gboolean
++leave_side_button (GtkButton *button,
++                   GdkEvent *event,
++                   gpointer data)
++{
++    TocItem *item = (TocItem*)data;
++    YelpWindowPrivate *priv = GET_PRIV (item->window);
++
++    if (item->checked)
++        goto bail;
++
++    if (!change_label_css (item->label, priv->default_css))
++        return FALSE;
++
++    gtk_style_context_add_provider (gtk_widget_get_style_context (item->label),
++        GTK_STYLE_PROVIDER (priv->default_css),
++        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
++
++bail:
++    return set_cursor ((YelpWindow *)item->window, CURSOR_DEFAULT);
+ }
+ 
+ static void
+@@ -789,7 +1133,7 @@ bookmark_activated (GtkListBox    *box,
+ {
+     YelpUri *base, *uri;
+     gchar *xref;
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+ 
+     gtk_widget_hide (priv->bookmark_menu);
+ 
+@@ -813,7 +1157,7 @@ bookmark_removed (GtkButton  *button,
+     YelpUri *uri;
+     gchar *doc_uri;
+     gchar *page_id = NULL;
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+ 
+     g_object_get (priv->view, "yelp-uri", &uri, NULL);
+     doc_uri = yelp_uri_get_document_uri (uri);
+@@ -842,7 +1186,7 @@ bookmark_added (GtkButton  *button,
+ {
+     YelpUri *uri;
+     gchar *doc_uri, *page_id, *icon, *title;
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+ 
+     g_object_get (priv->view,
+                   "yelp-uri", &uri,
+@@ -867,7 +1211,7 @@ app_bookmarks_changed (YelpApplication *app,
+ {
+     YelpUri *uri;
+     gchar *this_doc_uri;
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+ 
+     g_object_get (priv->view, "yelp-uri", &uri, NULL);
+     this_doc_uri = yelp_uri_get_document_uri (uri);
+@@ -911,7 +1255,7 @@ window_set_bookmarks (YelpWindow  *window,
+     GVariant *value;
+     GVariantIter *iter;
+     gchar *page_id, *icon, *title;
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     GList *children, *cur;
+     GSList *entries = NULL;
+ 
+@@ -971,7 +1315,7 @@ window_set_bookmark_buttons (YelpWindow *window)
+     YelpUri *uri = NULL;
+     gchar *doc_uri = NULL, *page_id = NULL;
+     gboolean bookmarked;
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+ 
+ 
+     g_object_get (priv->view,
+@@ -997,23 +1341,23 @@ window_set_bookmark_buttons (YelpWindow *window)
+         g_object_unref (uri);
+ }
+ 
+-static void
+-window_search_mode (GtkSearchBar  *search_bar,
+-                    GParamSpec    *pspec,
+-                    YelpWindow    *window)
+-{
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
+-
+-    if (gtk_search_bar_get_search_mode (GTK_SEARCH_BAR (search_bar)))
+-        gtk_revealer_set_reveal_child (GTK_REVEALER (priv->find_bar), FALSE);
+-}
++//static void
++//window_search_mode (GtkSearchBar  *search_bar,
++//                    GParamSpec    *pspec,
++//                    YelpWindow    *window)
++//{
++//    YelpWindowPrivate *priv = GET_PRIV (window);
++//
++//    if (gtk_search_bar_get_search_mode (GTK_SEARCH_BAR (search_bar)))
++//        gtk_revealer_set_reveal_child (GTK_REVEALER (priv->find_bar), FALSE);
++//}
+ 
+ static gboolean
+ find_entry_key_press (GtkEntry    *entry,
+                       GdkEventKey *event,
+                       YelpWindow  *window)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     WebKitFindController *find_controller;
+ 
+     find_controller = webkit_web_view_get_find_controller (WEBKIT_WEB_VIEW (priv->view));
+@@ -1038,7 +1382,7 @@ find_entry_changed (GtkEntry   *entry,
+                     YelpWindow *window)
+ {
+     gchar *text;
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     WebKitFindController *find_controller;
+ 
+     find_controller = webkit_web_view_get_find_controller (WEBKIT_WEB_VIEW (priv->view));
+@@ -1056,7 +1400,7 @@ static void
+ find_prev_clicked (GtkButton  *button,
+                    YelpWindow *window)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     WebKitFindController *find_controller;
+ 
+     find_controller = webkit_web_view_get_find_controller (WEBKIT_WEB_VIEW (priv->view));
+@@ -1067,7 +1411,7 @@ static void
+ find_next_clicked (GtkButton  *button,
+                    YelpWindow *window)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     WebKitFindController *find_controller;
+ 
+     find_controller = webkit_web_view_get_find_controller (WEBKIT_WEB_VIEW (priv->view));
+@@ -1079,7 +1423,7 @@ view_new_window (YelpView   *view,
+                  YelpUri    *uri,
+                  YelpWindow *window)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     yelp_application_new_window_uri (priv->application, uri);
+ }
+ 
+@@ -1091,7 +1435,7 @@ view_loaded (YelpView   *view,
+     YelpUri *uri;
+     gchar *doc_uri;
+     YelpViewState state;
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++//    YelpWindowPrivate *priv = GET_PRIV (window);
+ 
+     g_object_get (view,
+                   "yelp-uri", &uri,
+@@ -1106,14 +1450,16 @@ view_loaded (YelpView   *view,
+                       "page-icon", &icon,
+                       "page-title", &title,
+                       NULL);
+-        if (!g_str_has_prefix (page_id, "search=")) {
+-            gtk_search_bar_set_search_mode (GTK_SEARCH_BAR (priv->search_bar), FALSE);
+-        }
+-        yelp_application_update_bookmarks (priv->application,
+-                                           doc_uri,
+-                                           page_id,
+-                                           icon,
+-                                           title);
++
++        change_selection (doc_uri, window);
++//        if (!g_str_has_prefix (page_id, "search=")) {
++//            gtk_search_bar_set_search_mode (GTK_SEARCH_BAR (priv->search_bar), FALSE);
++//        }
++//        yelp_application_update_bookmarks (priv->application,
++//                                           doc_uri,
++//                                           page_id,
++//                                           icon,
++//                                           title);
+         g_free (page_id);
+         g_free (icon);
+         g_free (title);
+@@ -1150,7 +1496,7 @@ view_uri_selected (YelpView     *view,
+ {
+     YelpUri *uri;
+     gchar *doc_uri;
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+ 
+     g_object_get (G_OBJECT (view), "yelp-uri", &uri, NULL);
+     if (uri == NULL)
+@@ -1174,23 +1520,19 @@ view_root_title (YelpView    *view,
+                  GParamSpec  *pspec,
+                  YelpWindow  *window)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     gchar *root_title, *page_title;
+     g_object_get (view, "root-title", &root_title, "page-title", &page_title, NULL);
+ 
+     if (!priv->use_header) {
+         if (root_title)
+             gtk_window_set_title (GTK_WINDOW (window), root_title);
+-        else
+-            gtk_window_set_title (GTK_WINDOW (window), _("Help"));
+ 
+         goto out;
+     }
+ 
+     if (page_title)
+         gtk_header_bar_set_title (GTK_HEADER_BAR (priv->header), page_title);
+-    else
+-        gtk_header_bar_set_title (GTK_HEADER_BAR (priv->header), _("Help"));
+ 
+     if (root_title && (page_title == NULL || strcmp (root_title, page_title)))
+         gtk_header_bar_set_subtitle (GTK_HEADER_BAR (priv->header), root_title);
+@@ -1206,7 +1548,7 @@ static void
+ ctrll_entry_activate (GtkEntry    *entry,
+                       YelpWindow  *window)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     YelpUri *uri = yelp_uri_new (gtk_entry_get_text (entry));
+ 
+     yelp_window_load_uri (window, uri);
+@@ -1220,7 +1562,7 @@ ctrll_entry_key_press (GtkWidget    *widget,
+                        GdkEventKey  *event,
+                        YelpWindow   *window)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+ 
+     if (event->keyval == GDK_KEY_Escape) {
+         gtk_header_bar_set_custom_title (GTK_HEADER_BAR (priv->header), NULL);
+diff --git a/src/yelp-window.h b/src/yelp-window.h
+index a130306..c24a04f 100644
+--- a/src/yelp-window.h
++++ b/src/yelp-window.h
+@@ -44,6 +44,16 @@ struct _YelpWindowClass
+     GtkApplicationWindowClass  parent_class;
+ };
+ 
++typedef struct _tocItem {
++    YelpWindow *window;
++    GtkWidget  *button;
++    GtkWidget  *label;
++    GtkWidget  *row;
++    gchar      *title;
++    gchar      *id;
++    gboolean    checked;
++}TocItem;
++
+ GType             yelp_window_get_type     (void);
+ YelpWindow *      yelp_window_new          (YelpApplication *app);
+ void              yelp_window_load_uri     (YelpWindow      *window,
