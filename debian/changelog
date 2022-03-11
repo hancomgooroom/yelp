@@ -1,3 +1,13 @@
+yelp (3.38.3-1+han3u1) unstable; urgency=medium
+
+  [ jongkyung.woo ]
+  * [2fd0d11e] Rebuild on hancom-3.0
+
+  [ boyeon.choi ]
+  * [5461dc95] Hancom Gooroom 3.0 Initialization
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Fri, 11 Mar 2022 21:20:55 +0900
+
 yelp (3.38.3-1) unstable; urgency=medium
 
   * New upstream release
