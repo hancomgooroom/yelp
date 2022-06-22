@@ -1,0 +1,29 @@
+diff --git a/libyelp/yelp-help-list.c b/libyelp/yelp-help-list.c
+index 007ecc5..48726ba 100644
+--- a/libyelp/yelp-help-list.c
++++ b/libyelp/yelp-help-list.c
+@@ -76,6 +76,15 @@ help_list_entry_cmp (HelpListEntry *a, HelpListEntry *b)
+     return g_utf8_collate (as, bs);
+ }
+ 
++static gint
++help_list_ko_entry_cmp (HelpListEntry *a, HelpListEntry *b)
++{
++    gchar *as, *bs;
++    as = a->title ? a->title : strchr (a->id, ':') + 1;
++    bs = b->title ? b->title : strchr (b->id, ':') + 1;
++    return g_utf8_collate (bs, as);
++}
++
+ G_DEFINE_TYPE (YelpHelpList, yelp_help_list, YELP_TYPE_DOCUMENT)
+ #define GET_PRIV(object) (G_TYPE_INSTANCE_GET_PRIVATE ((object), YELP_TYPE_HELP_LIST, YelpHelpListPrivate))
+ 
+@@ -419,7 +428,7 @@ help_list_entries_init (YelpHelpList *list)
+     }
+ 
+     priv->all_entries = g_list_sort (priv->all_entries,
+-                                     (GCompareFunc) help_list_entry_cmp);
++                                     (GCompareFunc) help_list_ko_entry_cmp);
+     g_free (datadirs);
+ }
+ 

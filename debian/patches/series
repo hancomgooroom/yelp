@@ -3,3 +3,4 @@
 disable_package_search.patch
 required-content_rating-and-releases-appdata.patch
 gooroom-completed-applying-all-hancom-2.0-to-hancom-3.0.patch
+gooroom-sort-kor-list.patch
