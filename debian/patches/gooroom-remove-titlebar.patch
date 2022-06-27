@@ -1,0 +1,68 @@
+diff --git a/src/yelp-application.c b/src/yelp-application.c
+index f4ee0c8..a286631 100644
+--- a/src/yelp-application.c
++++ b/src/yelp-application.c
+@@ -364,7 +364,7 @@ yelp_application_startup (GApplication *application)
+     gchar *keyfile;
+     YelpSettings *settings;
+ 
+-    g_set_application_name (N_("Help"));
++    g_set_application_name (_("Help"));
+ 
+     ///* initialize ui */
+     //yelp_application_ui_init (app);
+diff --git a/src/yelp-window.c b/src/yelp-window.c
+index f754050..626da82 100644
+--- a/src/yelp-window.c
++++ b/src/yelp-window.c
+@@ -1520,28 +1520,28 @@ view_root_title (YelpView    *view,
+                  GParamSpec  *pspec,
+                  YelpWindow  *window)
+ {
+-    YelpWindowPrivate *priv = GET_PRIV (window);
+-    gchar *root_title, *page_title;
+-    g_object_get (view, "root-title", &root_title, "page-title", &page_title, NULL);
+-
+-    if (!priv->use_header) {
+-        if (root_title)
+-            gtk_window_set_title (GTK_WINDOW (window), root_title);
+-
+-        goto out;
+-    }
+-
+-    if (page_title)
+-        gtk_header_bar_set_title (GTK_HEADER_BAR (priv->header), page_title);
+-
+-    if (root_title && (page_title == NULL || strcmp (root_title, page_title)))
+-        gtk_header_bar_set_subtitle (GTK_HEADER_BAR (priv->header), root_title);
+-    else
+-        gtk_header_bar_set_subtitle (GTK_HEADER_BAR (priv->header), NULL);
+-
+-out:
+-    g_free (root_title);
+-    g_free (page_title);
++//    YelpWindowPrivate *priv = GET_PRIV (window);
++//    gchar *root_title, *page_title;
++//    g_object_get (view, "root-title", &root_title, "page-title", &page_title, NULL);
++//
++//    if (!priv->use_header) {
++//        if (root_title)
++//            gtk_window_set_title (GTK_WINDOW (window), root_title);
++//
++//        goto out;
++//    }
++//
++//    if (page_title)
++//        gtk_header_bar_set_title (GTK_HEADER_BAR (priv->header), page_title);
++//
++//    if (root_title && (page_title == NULL || strcmp (root_title, page_title)))
++//        gtk_header_bar_set_subtitle (GTK_HEADER_BAR (priv->header), root_title);
++//    else
++//        gtk_header_bar_set_subtitle (GTK_HEADER_BAR (priv->header), NULL);
++//
++//out:
++//    g_free (root_title);
++//    g_free (page_title);
+ }
+ 
+ static void
