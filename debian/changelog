@@ -1,3 +1,10 @@
+yelp (3.38.3-1+han3u3) unstable; urgency=medium
+
+  [ boyeon.choi ]
+  * [dd8cab49] [Bug: 118, 119] Removed the title label
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Tue, 28 Jun 2022 11:59:03 +0900
+
 yelp (3.38.3-1+han3u2) unstable; urgency=medium
 
   [ boyeon.choi ]
