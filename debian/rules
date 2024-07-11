@@ -1,0 +1,31 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,-O1 -Wl,-z,defs
+
+%:
+	dh $@
+
+execute_after_dh_auto_clean:
+	rm -f debian/yelp.1
+
+override_dh_auto_configure:
+	dh_auto_configure -- --enable-gtk-doc
+
+execute_after_dh_auto_build:
+	/usr/bin/docbook-to-man debian/yelp.sgml > debian/yelp.1
+
+override_dh_makeshlibs:
+	dh_makeshlibs -X/usr/lib/$(DEB_HOST_MULTIARCH)/yelp/ -- -c4
+
+execute_before_dh_install:
+	find debian/tmp -name '*.a' -print -delete
+	find debian/tmp -name '*.la' -print -delete
+
+# Ubuntu uses other fonts
+override_dh_gencontrol:
+ifneq ($(shell dpkg-vendor --query vendor),Ubuntu)
+	dh_gencontrol -- -Vfonts:Recommends='fonts-dejavu'
+else
+	dh_gencontrol
+endif
