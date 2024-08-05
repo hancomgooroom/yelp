@@ -1,0 +1,58 @@
+diff --git a/src/yelp-application.c b/src/yelp-application.c
+index 1524a18..303a0ef 100644
+--- a/src/yelp-application.c
++++ b/src/yelp-application.c
+@@ -526,7 +526,7 @@ yelp_application_command_line (GApplication            *application,
+     gchar **argv;
+     int i;
+ 
+-    argv = g_application_command_line_get_arguments (cmdline, NULL);
++	argv = g_application_command_line_get_arguments (cmdline, NULL);
+ 
+     if (argv[1] == NULL)
+         open_uri (app, yelp_uri_new (DEFAULT_URI), FALSE, TRUE);
+@@ -657,6 +657,7 @@ application_window_deleted (YelpWindow      *window,
+     if (doc_uri)
+         g_hash_table_remove (priv->windows_by_document, doc_uri);
+ 
++    g_application_quit (G_APPLICATION (app));
+     return FALSE;
+ }
+ 
+diff --git a/src/yelp-window.c b/src/yelp-window.c
+index 4a19574..c1aff4c 100644
+--- a/src/yelp-window.c
++++ b/src/yelp-window.c
+@@ -618,7 +618,7 @@ window_construct (YelpWindow *window)
+ 
+     menu = g_menu_new ();
+     section = g_menu_new ();
+-    g_menu_append (section, _("New Window"), "win.yelp-window-new");
++    //g_menu_append (section, _("New Window"), "win.yelp-window-new");
+     g_menu_append (section, _("Find…"), "win.yelp-window-find");
+     g_menu_append (section, _("Print…"), "win.yelp-view-print");
+     g_menu_append_section (menu, NULL, G_MENU_MODEL (section));
+@@ -633,12 +633,12 @@ window_construct (YelpWindow *window)
+     section = g_menu_new ();
+     g_menu_append (section, _("Larger Text"), "app.yelp-application-larger-text");
+     g_menu_append (section, _("Smaller Text"), "app.yelp-application-smaller-text");
+-    g_menu_append_section (menu, NULL, G_MENU_MODEL (section));
++    //g_menu_append_section (menu, NULL, G_MENU_MODEL (section));
+     g_object_unref (section);
+ 
+     section = g_menu_new ();
+     g_menu_append (section, _("All Help"), "win.yelp-window-go-all");
+-    g_menu_append_section (menu, NULL, G_MENU_MODEL (section));
++    //g_menu_append_section (menu, NULL, G_MENU_MODEL (section));
+     g_object_unref (section);
+ 
+     gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (button), G_MENU_MODEL (menu));
+@@ -711,7 +711,7 @@ window_construct (YelpWindow *window)
+                           gtk_image_new_from_icon_name ("user-bookmarks-symbolic",
+                                                         GTK_ICON_SIZE_MENU));
+     gtk_widget_set_tooltip_text (button, _("Bookmarks"));
+-    hdy_header_bar_pack_end (HDY_HEADER_BAR (priv->header), button);
++    //hdy_header_bar_pack_end (HDY_HEADER_BAR (priv->header), button);
+ 
+     priv->bookmark_menu = gtk_popover_new (button);
+     g_object_set (priv->bookmark_menu, "border-width", 12, NULL);
