@@ -1,0 +1,84 @@
+diff --git a/libyelp/yelp-view.c b/libyelp/yelp-view.c
+index 3e5fbd0..12c53c1 100644
+--- a/libyelp/yelp-view.c
++++ b/libyelp/yelp-view.c
+@@ -234,6 +234,7 @@ struct _YelpViewPrivate {
+ 
+     gboolean        resolve_uri_on_policy_decision;
+     gboolean        load_page_after_resolved;
++    gboolean        uri_resolve_once;
+ };
+ 
+ #define TARGET_TYPE_URI_LIST     "text/uri-list"
+@@ -303,10 +304,10 @@ yelp_view_init (YelpView *view)
+     YelpViewPrivate *priv = GET_PRIV (view);
+ 
+     priv->cancellable = NULL;
+-
+     priv->prevstate = priv->state = YELP_VIEW_STATE_BLANK;
+ 
+     priv->resolve_uri_on_policy_decision = TRUE;
++    priv->uri_resolve_once = FALSE;
+     g_signal_connect (view, "decide-policy",
+                       G_CALLBACK (view_policy_decision_requested), NULL);
+     g_signal_connect (view, "load-changed",
+@@ -743,7 +744,10 @@ yelp_view_resolve_uri (YelpView *view,
+     YelpViewPrivate *priv = GET_PRIV (view);
+ 
+     if (yelp_uri_is_resolved (uri)) {
+-        uri_resolved (uri, view);
++        if (priv->uri_resolve_once == FALSE){
++            priv->uri_resolve_once = TRUE;
++            uri_resolved (uri, view);
++        }
+         return;
+     }
+ 
+@@ -781,7 +785,7 @@ document_callback (YelpDocument       *document,
+            to reuse the request object, so we do a fresh load.
+          */
+         YelpView *view = YELP_VIEW (webkit_uri_scheme_request_get_web_view (data->request));
+-        YelpViewPrivate *priv = yelp_view_get_instance_private (view);
++        YelpViewPrivate *priv = GET_PRIV (view);
+         yelp_view_load_uri (view, priv->uri);
+         return;
+     }
+diff --git a/src/yelp-window.c b/src/yelp-window.c
+index c1aff4c..42a835c 100644
+--- a/src/yelp-window.c
++++ b/src/yelp-window.c
+@@ -518,7 +518,7 @@ window_construct (YelpWindow *window)
+     GtkCssProvider *css;
+     GtkSizeGroup *size_group;
+     GMenu *menu, *section;
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+ 
+     const GActionEntry entries[] = {
+         { "yelp-window-new",    action_new_window,   NULL, NULL, NULL },
+@@ -1054,7 +1054,7 @@ window_key_press (YelpWindow  *window,
+                   GdkEventKey *event,
+                   gpointer     userdata)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+ 
+     if (gtk_revealer_get_reveal_child (GTK_REVEALER (priv->find_bar)))
+         return FALSE;
+@@ -1434,7 +1434,6 @@ static void
+ view_loaded (YelpView   *view,
+              YelpWindow *window)
+ {
+-
+     YelpUri *uri;
+     gchar *doc_uri;
+     YelpViewState state;
+@@ -1523,7 +1522,7 @@ view_root_title (YelpView    *view,
+                  GParamSpec  *pspec,
+                  YelpWindow  *window)
+ {
+-    YelpWindowPrivate *priv = yelp_window_get_instance_private (window);
++    YelpWindowPrivate *priv = GET_PRIV (window);
+     gchar *root_title, *page_title;
+     g_object_get (view, "root-title", &root_title, "page-title", &page_title, NULL);
+ 

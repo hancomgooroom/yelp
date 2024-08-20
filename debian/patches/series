@@ -3,3 +3,4 @@
 disable_package_search.patch
 hancom-01-gooroom-custom-ui.patch
 hancom-02-gtk-application-exit.patch
+hancom-03-yelp-ends-without-finding-the-content.patch
